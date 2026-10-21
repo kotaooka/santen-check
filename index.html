@@ -518,66 +518,61 @@ const DAYS = [
   { name: "客先監査週間", sub: "クレーム 2 件で出荷停止。監査員は本気", rate: .32, stageAt: [0, 2, 8], switch: true, startLvl: 2, claimMax: 2, boss: true, bossK: .95 },
 ];
 
-/* ====== 部品の絵（320×160、RH を基準に描き LH は左右反転） ====== */
+/* ====== 品物の絵（320×160、R を基準に描き L は左右反転） ====== */
 const RESIN = "#1c1e21";
 const STROKE = "rgba(0,0,0,.55)";
 const PARTS = [
-  { key: "fspoiler", name: "フロントスポイラー", brk: ["フロント", "スポイラー"], sided: false, qtys: [1], tag: [106, 66],
-    body: "M14 64 Q18 54 34 56 L120 62 Q160 64 200 62 L286 56 Q302 54 306 64 L300 94 Q296 104 280 106 L200 112 Q160 115 120 112 L40 106 Q24 104 20 94 Z",
+  { key: "insole", name: "インソール", brk: ["インソール"], sided: true, qtys: [2, 4], tag: [96, 56],
+    body: "M28 82 Q26 52 66 48 L150 42 Q220 28 272 36 Q308 44 308 74 Q308 104 278 112 Q240 120 200 106 Q160 94 120 104 L72 114 Q30 116 28 82 Z",
+    parts: () => {
+      let dots = "";
+      for (let x = 214; x <= 290; x += 13) for (let y = 52; y <= 96; y += 11) dots += `<circle cx="${x}" cy="${y}" r="2.2" fill="#000" fill-opacity=".28"/>`;
+      return `${dots}
+      <path d="M72 60 Q46 82 72 104" fill="none" stroke="#000" stroke-opacity=".25" stroke-width="3"/>
+      <path d="M60 52 Q140 40 268 40" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="2"/>`;
+    } },
+  { key: "lever", name: "レバーハンドル", brk: ["レバー", "ハンドル"], sided: true, qtys: [1, 2], tag: [128, 66],
+    body: "M40 80 Q40 44 76 44 Q100 44 108 60 L270 62 Q300 63 304 84 Q306 104 288 110 L282 96 Q280 86 266 86 L108 96 Q100 116 76 116 Q40 116 40 80 Z",
     parts: () => `
-      <path d="M24 100 Q40 106 120 112 Q160 115 200 112 Q280 106 296 100 L292 108 Q280 114 200 120 Q160 124 120 120 Q40 114 28 108 Z" fill="${RESIN}"/>
-      <path d="M40 76 L84 72 L82 96 L46 100 Z M280 76 L236 72 L238 96 L274 100 Z" fill="${RESIN}"/>
-      <path d="M48 82 L80 79 M48 89 L80 86 M272 82 L240 79 M272 89 L240 86" stroke="#4a4e54" stroke-width="2"/>
-      <rect x="136" y="92" width="48" height="14" rx="4" fill="${RESIN}"/>
-      <path d="M142 99 h36" stroke="#4a4e54" stroke-width="2"/>
-      <path d="M34 58 L120 64 Q160 66 200 64 L286 58" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1.5"/>` },
-  { key: "skirt", name: "サイドスカート", brk: ["サイド", "スカート"], sided: true, qtys: [1], tag: [150, 60],
-    body: "M10 74 Q10 62 24 62 L284 52 Q300 50 308 60 L314 76 Q316 90 302 94 L44 108 Q18 110 12 96 Z",
+      <circle cx="76" cy="80" r="24" fill="none" stroke="#000" stroke-opacity=".3" stroke-width="2"/>
+      <circle cx="76" cy="80" r="9" fill="#000" fill-opacity=".25"/>
+      <circle cx="76" cy="53" r="3" fill="#000" fill-opacity=".5"/><circle cx="76" cy="107" r="3" fill="#000" fill-opacity=".5"/>
+      <path d="M112 66 L268 67 Q292 68 298 84" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2"/>` },
+  { key: "bracket", name: "棚受け金具", brk: ["棚受け", "金具"], sided: true, qtys: [2, 4], tag: [150, 98],
+    body: "M40 24 L74 24 L74 94 L292 94 L292 128 L54 128 Q40 128 40 114 Z",
     parts: () => `
-      <path d="M16 98 Q22 106 44 104 L300 90 Q312 88 314 80 L314 88 Q314 98 300 100 L44 114 Q18 116 14 104 Z" fill="${RESIN}"/>
-      <path d="M28 84 L300 70" stroke="#fff" stroke-opacity=".35" stroke-width="1.5"/>
-      <path d="M28 87 L300 73" stroke="#000" stroke-opacity=".3" stroke-width="1.5"/>
-      <circle cx="40" cy="72" r="2.4" fill="#000" fill-opacity=".5"/><circle cx="110" cy="68" r="2.4" fill="#000" fill-opacity=".5"/>
-      <circle cx="290" cy="62" r="2.4" fill="#000" fill-opacity=".5"/>
-      <path d="M24 63 L284 53 Q298 51 306 60" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1.5"/>` },
-  { key: "mirror", name: "ドアミラーカバー", brk: ["ドアミラー", "カバー"], sided: true, qtys: [2, 4], tag: [100, 64],
-    body: "M58 42 Q150 22 254 38 Q300 46 302 82 Q302 118 256 126 L96 132 Q50 132 40 104 Q32 62 58 42 Z",
+      <path d="M74 58 L160 94" stroke="#000" stroke-opacity=".3" stroke-width="7" stroke-linecap="round"/>
+      ${[[57, 40], [57, 72], [104, 111], [276, 111]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5" fill="#000" fill-opacity=".6"/>`).join("")}
+      <path d="M42 26 L72 26 M76 96 L290 96" stroke="#fff" stroke-opacity=".45" stroke-width="2"/>` },
+  { key: "case", name: "スマホケース", brk: ["スマホ", "ケース"], sided: false, qtys: [1, 2], tag: [150, 90],
+    body: "M30 40 Q30 24 46 24 L274 24 Q290 24 290 40 L290 120 Q290 136 274 136 L46 136 Q30 136 30 120 Z",
     parts: () => `
-      <path d="M40 104 Q32 62 58 42 L66 48 Q42 66 50 102 Z" fill="${RESIN}"/>
-      <path d="M176 124 Q240 122 280 106 Q294 98 298 88 L302 94 Q300 118 258 128 Q220 134 176 132 Z" fill="url(#amber)" stroke="#000" stroke-opacity=".4"/>
-      <path d="M190 128 Q240 126 284 106" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="1"/>
-      <path d="M70 44 Q150 28 250 42 Q290 50 296 74" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2"/>` },
-  { key: "mud", name: "マッドガード", brk: ["マッド", "ガード"], sided: true, qtys: [2, 4], tag: [62, 74],
-    body: "M40 20 L138 20 Q150 20 152 32 Q158 62 194 70 L274 74 Q288 74 288 88 L284 132 Q284 140 272 140 L52 140 Q40 140 40 128 Z",
+      <rect x="36" y="30" width="248" height="100" rx="12" fill="none" stroke="#000" stroke-opacity=".18" stroke-width="2"/>
+      <rect x="44" y="36" width="58" height="42" rx="11" fill="#000" fill-opacity=".22"/>
+      <circle cx="62" cy="51" r="8" fill="#111"/><circle cx="85" cy="63" r="8" fill="#111"/><circle cx="85" cy="45" r="3" fill="#ddd"/>
+      <rect x="190" y="24" width="40" height="4" fill="#000" fill-opacity=".3"/>` },
+  { key: "bento", name: "弁当箱", brk: ["弁当箱"], sided: false, qtys: [1, 2], tag: [106, 66],
+    body: "M40 36 Q40 26 56 26 L264 26 Q280 26 280 36 L280 60 L296 62 Q300 62 300 66 L300 94 Q300 98 296 98 L280 100 L280 124 Q280 134 264 134 L56 134 Q40 134 40 124 L40 100 L24 98 Q20 98 20 94 L20 66 Q20 62 24 62 L40 60 Z",
     parts: () => `
-      <path d="M50 120 L278 120 M50 127 L278 127" stroke="#000" stroke-opacity=".28" stroke-width="2"/>
-      <rect x="196" y="100" width="56" height="10" rx="2" fill="none" stroke="#fff" stroke-opacity=".35"/>
-      ${[[64, 36], [124, 36], [262, 92]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5.5" fill="#c9cdd1" stroke="#555"/><path d="M${x - 3} ${y} h6 M${x} ${y - 3} v6" stroke="#555" stroke-width="1.4"/>`).join("")}
-      <path d="M44 22 L138 22 Q148 22 150 32" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1.5"/>` },
-  { key: "arch", name: "フェンダーモール", brk: ["フェンダー", "モール"], sided: true, qtys: [2], tag: [150, 27],
-    body: "M20 136 Q24 40 140 22 Q248 10 304 70 L282 86 Q236 44 146 52 Q64 62 54 136 Z",
+      <rect x="52" y="38" width="216" height="84" rx="10" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="2"/>
+      <path d="M20 66 Q20 62 24 62 L40 60 L40 100 L24 98 Q20 98 20 94 Z M300 66 Q300 62 296 62 L280 60 L280 100 L296 98 Q300 98 300 94 Z" fill="${RESIN}" fill-opacity=".75"/>
+      <circle cx="248" cy="50" r="7" fill="#000" fill-opacity=".3"/>` },
+  { key: "mug", name: "マグカップ", brk: ["マグ", "カップ"], sided: false, qtys: [2, 4], tag: [86, 66],
+    body: "M70 30 L210 30 Q216 30 216 36 L216 52 Q252 50 256 80 Q252 110 216 108 L216 124 Q216 130 210 130 L70 130 Q64 130 64 124 L64 36 Q64 30 70 30 Z",
     parts: () => `
-      <path d="M54 136 Q64 62 146 52 Q236 44 282 86 L276 92 Q232 54 148 60 Q72 70 62 136 Z" fill="${RESIN}" fill-opacity=".85"/>
-      ${[[64, 104], [92, 72], [134, 58], [226, 58], [264, 76]].map(([x, y]) => `<rect x="${x - 4}" y="${y - 3}" width="8" height="6" rx="1" fill="#e9e6dc" stroke="#888" stroke-width=".6"/>`).join("")}
-      <path d="M26 132 Q30 46 140 26 Q246 14 300 70" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="1.5"/>` },
-  { key: "rspoiler", name: "リヤスポイラー", brk: ["リヤ", "スポイラー"], sided: false, qtys: [1], tag: [106, 54],
-    body: "M16 70 Q40 50 160 46 Q280 50 304 70 L300 96 Q160 88 20 96 Z",
-    parts: () => `
-      <path d="M66 94 L88 92 L92 124 L62 126 Z M232 92 L254 94 L258 126 L228 124 Z" fill="${RESIN}"/>
-      <rect x="58" y="124" width="38" height="5" rx="1" fill="#000" fill-opacity=".6"/><rect x="224" y="124" width="38" height="5" rx="1" fill="#000" fill-opacity=".6"/>
-      <path d="M118 88 Q160 85 202 88 L201 94 Q160 91 119 94 Z" fill="url(#redlens)" stroke="#000" stroke-opacity=".4"/>
-      <path d="M16 70 Q12 82 20 96 L28 95 Q22 82 26 66 Z M304 70 Q308 82 300 96 L292 95 Q298 82 294 66 Z" fill="${RESIN}"/>
-      <path d="M30 62 Q60 50 160 48 Q260 50 290 62" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2"/>` },
+      <path d="M216 62 Q240 62 242 80 Q240 98 216 98 Z" fill="#000" fill-opacity=".55"/>
+      <path d="M74 34 L74 126" stroke="#000" stroke-opacity=".2" stroke-width="3"/>
+      <path d="M78 44 L208 44" stroke="#fff" stroke-opacity=".5" stroke-width="4" stroke-linecap="round"/>` },
 ];
 /* 色。pair は見間違えやすい相手 */
 const COLORS = [
-  { code: "070", name: "ホワイトパール", hex: "#eceee9", pair: "1F7" },
-  { code: "1F7", name: "シルバーメタリック", hex: "#b4b8bd", pair: "070" },
-  { code: "202", name: "ブラック", hex: "#1f2023", pair: "218" },
-  { code: "218", name: "ブラックマイカ", hex: "#272a38", pair: "202", mica: true },
-  { code: "1G3", name: "グレーメタリック", hex: "#6b7179" },
-  { code: "3R3", name: "レッドマイカ", hex: "#9b1e24", mica: true },
-  { code: "8W9", name: "ダークブルー", hex: "#24365c" },
+  { code: "W10", name: "ホワイト", hex: "#eceee9", pair: "S20" },
+  { code: "S20", name: "シルバー", hex: "#b4b8bd", pair: "W10" },
+  { code: "K30", name: "ブラック", hex: "#1f2023", pair: "K31" },
+  { code: "K31", name: "チャコールラメ", hex: "#272a38", pair: "K30", mica: true },
+  { code: "G40", name: "グレー", hex: "#6b7179" },
+  { code: "R50", name: "ワインレッド", hex: "#9b1e24", mica: true },
+  { code: "B60", name: "ネイビー", hex: "#24365c" },
 ];
 const byCode = c => COLORS.find(x => x.code === c);
 const REVS = ["A", "B", "C", "D", "E"];
@@ -606,9 +601,9 @@ const pick = a => a[rnd(a.length)];
 const digits = n => Array.from({ length: n }, () => rnd(10)).join("");
 const chance = p => Math.random() < p;
 
-/* 品番：英字1文字＋4桁-5桁。左右品は末尾 1=RH, 2=LH */
+/* 品番：英字1文字＋4桁-5桁。左右品は末尾 1=R, 2=L */
 function makePn(sided, side) {
-  return pick(["D", "M", "T"]) + digits(4) + "-" + digits(4) + (sided ? (side === "RH" ? "1" : "2") : "0");
+  return pick(["D", "M", "T"]) + digits(4) + "-" + digits(4) + (sided ? (side === "R" ? "1" : "2") : "0");
 }
 const flipSidePn = pn => pn.slice(0, -1) + (pn.endsWith("1") ? "2" : "1");
 function similarPn(pn) {
@@ -640,7 +635,7 @@ const stageOf = (i, day) => (day.boss && i >= BOSS_FROM) || i >= day.stageAt[2] 
    ・静かな区間：QUIET 箱続けて正常のあとに異常を1つ置く */
 function makeShift(day) {
   const mType = pick(PARTS.filter(p => p.sided && p.qtys.some(q => q > 1)));
-  const mSide = pick(["RH", "LH"]);
+  const mSide = pick(["R", "L"]);
   const oldRev = pick(REVS.slice(0, 4));
   const main = {
     type: mType, side: mSide, pn: makePn(true, mSide), color: pick(COLORS), qty: pick(mType.qtys),
@@ -683,7 +678,7 @@ function makeBox(i, wantDefect, isMain, main, switchAt, forceOld, day) {
       rev: i >= switchAt ? main.newRev : main.oldRev, main: true };
   } else {
     const type = pick(PARTS);
-    const side = type.sided ? pick(["RH", "LH"]) : null;
+    const side = type.sided ? pick(["R", "L"]) : null;
     truth = { type, side, pn: makePn(type.sided, side), color: pick(COLORS), rev: pick(REVS), qty: pick(type.qtys) };
   }
   const label = { ...truth };
@@ -699,7 +694,7 @@ function makeBox(i, wantDefect, isMain, main, switchAt, forceOld, day) {
     if (chance(0.5)) part.foreign = { ...pick(FOREIGN), at: [262, 114] };
     else {
       part.type = pick(PARTS.filter(p => p !== truth.type));
-      part.side = part.type.sided ? (truth.side || "RH") : null;
+      part.side = part.type.sided ? (truth.side || "R") : null;
       part.pn = makePn(part.type.sided, part.side);
     }
     box.defect = { where: "part", field: part.foreign ? "foreign" : "type" };
@@ -741,12 +736,12 @@ function makeBox(i, wantDefect, isMain, main, switchAt, forceOld, day) {
       if (odd) odd.color = c; else part.color = c;
     }
     if (f === "side") {
-      const s = truth.side === "RH" ? "LH" : "RH";
+      const s = truth.side === "R" ? "L" : "R";
       if (odd) odd.side = s; else { part.side = s; part.pn = flipSidePn(truth.pn); }
     }
     if (f === "type") {
       const ty = pick(PARTS.filter(p => p !== truth.type));
-      const sd = ty.sided ? (truth.side || pick(["RH", "LH"])) : null;
+      const sd = ty.sided ? (truth.side || pick(["R", "L"])) : null;
       if (odd) { odd.type = ty; odd.side = sd; }
       else { part.type = ty; part.side = sd; part.pn = makePn(ty.sided, sd); }
     }
@@ -879,7 +874,7 @@ function barcodeSvg(text) {
 
 /* 1個分の絵。(ox, oy) へ縮尺 s で置く */
 function pieceSvg(pc, ox, oy, s) {
-  const t = pc.type, flip = pc.side === "LH";
+  const t = pc.type, flip = pc.side === "L";
   return `<g transform="translate(${ox.toFixed(1)},${oy.toFixed(1)}) scale(${s})"><g transform="${flip ? "translate(320,0) scale(-1,1)" : ""}">
       <path d="${t.body}" transform="translate(4,7)" fill="#000" opacity=".3"/>
       <path d="${t.body}" fill="${pc.color.hex}" stroke="${STROKE}" stroke-width="${(1.5 / s).toFixed(2)}"/>
@@ -898,7 +893,7 @@ function partSvg(p) {
   for (let k = n - 1; k >= 0; k--) pieces += pieceSvg(p.pieces[k], ox0 + k * dx, oy0 + k * dy, s);
   const front = p.pieces[0];
   const [tx0, ty0] = front.type.tag;
-  const lx = front.side === "LH" ? 320 - tx0 - 108 : tx0;
+  const lx = front.side === "L" ? 320 - tx0 - 108 : tx0;
   const tagX = Math.max(2, Math.min(320 - 110, ox0 + lx * s + (108 * s - 108) / 2));
   const ty = Math.max(2, Math.min(160 - 30, oy0 + ty0 * s));
   const f = p.foreign;
@@ -937,14 +932,14 @@ function rowHtml(key, label, value, mono, extraCls = "", sub = "", ddCls = "") {
    fall() → Promise / reveal() / unmount() */
 const W = 3.2, H = 1.6;              // 部品1個の大きさ（ワールド座標。SVG の 320×160 を 1/100）
 /* 部品ごとのふくらみ：H＝高さ、R＝縁から平らになるまでの幅、C＝左右方向の反り */
-const TAG_S = { fspoiler: 0.9, skirt: 0.85, mirror: 1, mud: 1, arch: 0.72, rspoiler: 0.85 };
+const TAG_S = { insole: 0.9, lever: 0.7, bracket: 0.75, case: 1, bento: 1, mug: 0.65 };
 const DOME = {
-  fspoiler: { H: 0.06, R: 0.2, C: 0.04 },
-  skirt: { H: 0.07, R: 0.18 },
-  mirror: { H: 0.3, R: 0.7 },
-  mud: { H: 0.03, R: 0.08 },
-  arch: { H: 0.05, R: 0.12 },
-  rspoiler: { H: 0.07, R: 0.25, C: 0.03 },
+  insole: { H: 0.05, R: 0.25 },
+  lever: { H: 0.08, R: 0.1 },
+  bracket: { H: 0.02, R: 0.05 },
+  case: { H: 0.07, R: 0.14 },
+  bento: { H: 0.14, R: 0.32 },
+  mug: { H: 0.16, R: 0.45 },
 };
 const LAYOUT = [null, [1, 0, 0], [.8, 36, -16], [.72, 30, -13], [.66, 26, -11], [.6, 23, -10], [.56, 20, -9]];
 
@@ -1230,7 +1225,7 @@ const View3D = {
     this.night = !!opts.night; this.audit = !!opts.audit; this.demo = !!opts.demo;
     this.running = false; this.alarmUntil = 0;
     this.clearItems();
-    const metalish = c => ["1F7", "1G3", "218", "3R3", "8W9", "070"].includes(c.code);
+    const metalish = c => ["S20", "G40", "K31", "R50", "B60", "W10"].includes(c.code);
     const s = L.s;
     const env = this.night ? 0.12 : 1.15;
     let y = 0, front = null;
@@ -1248,7 +1243,7 @@ const View3D = {
       const dome = new T.Mesh(geo.dome, cap);
       for (const mm of [slab, dome]) { mm.castShadow = mm.receiveShadow = true; piece.add(mm); }
       piece.rotation.x = -Math.PI / 2;
-      piece.scale.set(pc.side === "LH" ? -s : s, s, s);
+      piece.scale.set(pc.side === "L" ? -s : s, s, s);
       const cx = L.ox0 + k * L.dx + 160 * s, cy = L.oy0 + k * L.dy + 80 * s;
       piece.position.set((cx - 160) / 100, y, (cy - 80) / 100);
       y += (geo.top + 0.03) * s;
@@ -1259,7 +1254,7 @@ const View3D = {
     // 識別ラベル：手前の1個の曲面に沿わせて貼る（文字は反転させない）
     const [tx0, ty0] = front.pc.type.tag;
     const cxL = (tx0 + 54 - 160) / 100, cyL = (80 - (ty0 + 14)) / 100;
-    const flipT = front.pc.side === "LH";
+    const flipT = front.pc.side === "L";
     const ts = TAG_S[front.pc.type.key] || 1;
     const tg = new T.PlaneGeometry(1.35 * ts / s, 0.35 * ts / s, 36, 12);
     const tp = tg.attributes.position;
