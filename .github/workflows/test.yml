@@ -1,0 +1,12 @@
+# push と pull request のたびに、問題の作り方とルールの検算を走らせる
+name: test
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node tests/test.js
