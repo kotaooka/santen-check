@@ -1021,8 +1021,8 @@ const View3D = {
       pm.dispose();
 
       const cam = new T.PerspectiveCamera(30, 2, 0.1, 40);
-      cam.position.set(0, 4.3, 3.9);
-      cam.lookAt(0, 0, 0.18);
+      cam.position.set(0, 2.8, 4.45);
+      cam.lookAt(0, 0.2, 0.05);
 
       // 照明
       const L = {};
@@ -1053,8 +1053,8 @@ const View3D = {
       belt.position.y = -0.07; belt.receiveShadow = true; scene.add(belt);
       const metal = new T.MeshStandardMaterial({ color: 0x2c3137, roughness: 0.6, metalness: 0.6, envMapIntensity: 0.35 });
       for (const z of [-1.24, 1.24]) {
-        const rail = new T.Mesh(new T.BoxGeometry(14, 0.26, 0.16), metal);
-        rail.position.set(0, 0.0, z); rail.castShadow = rail.receiveShadow = true; scene.add(rail);
+        const rail = new T.Mesh(new T.BoxGeometry(14, 0.16, 0.12), metal);
+        rail.position.set(0, -0.02, z); rail.castShadow = rail.receiveShadow = true; scene.add(rail);
         for (let x = -6; x <= 6; x += 1.5) {
           const bolt = new T.Mesh(new T.CylinderGeometry(0.035, 0.035, 0.02, 12), metal);
           bolt.rotation.x = Math.PI / 2; bolt.position.set(x, 0.02, z + (z > 0 ? 0.09 : -0.09)); scene.add(bolt);
@@ -1218,78 +1218,235 @@ const View3D = {
     return t;
   },
 
+  /* ===== 品物の 3D モデル =====
+     どれも x＝長さ、y＝上、z＝手前 の向きで、原点を中心に作る。床（y=0）に置いた状態。
+     返す値：group（モデル）、lx・lz（床の上の大きさ）、h（高さ）、tag（ラベルを貼る位置） */
+  cgeo(key, make) {
+    if (!this.geoCache.has(key)) { const g = make(); this.geoCache.set(key, g); this.cachedGeo.add(g); }
+    return this.geoCache.get(key);
+  },
+  svgShape(d) {
+    const T = THREE, shape = new T.Shape();
+    const tok = d.match(/[MLQZ]|-?\d+(?:\.\d+)?/g);
+    const P = (x, y) => [(+x - 160) / 100, (80 - +y) / 100];
+    for (let i = 0; i < tok.length;) {
+      const c = tok[i++];
+      if (c === "M") { const [x, y] = P(tok[i++], tok[i++]); shape.moveTo(x, y); }
+      else if (c === "L") { const [x, y] = P(tok[i++], tok[i++]); shape.lineTo(x, y); }
+      else if (c === "Q") { const [a, b] = P(tok[i++], tok[i++]); const [x, y] = P(tok[i++], tok[i++]); shape.quadraticCurveTo(a, b, x, y); }
+      else if (c === "Z") shape.closePath();
+    }
+    return shape;
+  },
+  rr(w, h, r) {
+    const s = new THREE.Shape(), x = -w / 2, y = -h / 2;
+    s.moveTo(x + r, y); s.lineTo(x + w - r, y); s.quadraticCurveTo(x + w, y, x + w, y + r);
+    s.lineTo(x + w, y + h - r); s.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    s.lineTo(x + r, y + h); s.quadraticCurveTo(x, y + h, x, y + h - r);
+    s.lineTo(x, y + r); s.quadraticCurveTo(x, y, x + r, y);
+    return s;
+  },
+  hole(cx, cy, r) { const p = new THREE.Path(); p.absarc(cx, cy, r, 0, Math.PI * 2, true); return p; },
+  /* 平らに寝かせた押し出し（床から depth＋面取り×2 の高さ）。形の y は奥行き（-z）になる */
+  flat(shape, depth, bevel, seg = 4) {
+    const g = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: bevel > 0, bevelThickness: bevel, bevelSize: bevel, bevelSegments: seg, curveSegments: 28 });
+    g.rotateX(-Math.PI / 2); g.translate(0, bevel, 0);
+    return g;
+  },
+  /* 仕上げごとの材質。色は品物の色 */
+  mat(color, finish) {
+    const T = THREE, F = {
+      foam: { roughness: 0.92, metalness: 0, clearcoat: 0 },
+      metal: { roughness: 0.28, metalness: 0.8, clearcoat: 0.4, clearcoatRoughness: 0.15 },
+      powder: { roughness: 0.55, metalness: 0.35, clearcoat: 0.2, clearcoatRoughness: 0.4 },
+      gloss: { roughness: 0.25, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.05 },
+      satin: { roughness: 0.42, metalness: 0.02, clearcoat: 0.5, clearcoatRoughness: 0.25 },
+      glaze: { roughness: 0.1, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.02 },
+    }[finish];
+    const m = new T.MeshPhysicalMaterial({ color: new T.Color(color.hex).convertSRGBToLinear(), ...F, envMapIntensity: this.night ? 0.12 : 1.1 });
+    if (color.code === "S20") { m.metalness = Math.max(m.metalness, 0.65); m.roughness = Math.min(m.roughness, 0.35); }
+    if (color.mica) { m.normalMap = this.flake(); m.normalScale.set(0.22, 0.22); }
+    return m;
+  },
+  dark(rough = 0.45) { return new THREE.MeshStandardMaterial({ color: 0x141518, roughness: rough, metalness: 0.1, envMapIntensity: this.night ? 0.1 : 0.8 }); },
+  steel() { return new THREE.MeshStandardMaterial({ color: 0xb9bec4, roughness: 0.25, metalness: 0.95, envMapIntensity: this.night ? 0.1 : 1 }); },
+  mesh(g, m, parent) { const o = new THREE.Mesh(g, m); o.castShadow = o.receiveShadow = true; parent.add(o); return o; },
+
+  buildModel(pc) {
+    const T = THREE, t = pc.type, g = new T.Group();
+    const darker = c => ({ ...c, hex: "#" + new T.Color(c.hex).multiplyScalar(0.72).getHexString() });
+    if (t.key === "insole") {
+      // 厚みのあるフォーム。かかとの立ち上がりと、つま先の通気穴
+      const shape = this.svgShape(t.body);
+      this.mesh(this.cgeo("insole", () => this.flat(shape, 0.06, 0.035)), [this.mat(pc.color, "foam"), this.mat(darker(pc.color), "foam")], g);
+      const pts = shape.getSpacedPoints(240), isHeel = p => p.x < -0.78;
+      let k = pts.findIndex((p, i) => !isHeel(p) && isHeel(pts[(i + 1) % pts.length]));
+      const arc = [];
+      for (let i = 1; i < pts.length; i++) { const p = pts[(k + i) % pts.length]; if (!isHeel(p)) break; arc.push(new T.Vector3(p.x * 0.985, 0.13, -p.y * 0.95)); }
+      if (arc.length > 3) this.mesh(this.cgeo("insole-heel", () => new T.TubeGeometry(new T.CatmullRomCurve3(arc), 48, 0.05, 10, false)), this.mat(darker(pc.color), "foam"), g);
+      const dots = this.cgeo("insole-dot", () => new T.CylinderGeometry(0.02, 0.02, 0.012, 10));
+      const im = new T.InstancedMesh(dots, this.dark(0.9), 40); let c = 0;
+      const mm = new T.Matrix4();
+      for (let x = 0.55; x <= 1.3; x += 0.13) for (let z = -0.26; z <= 0.2; z += 0.11) { if (c < 40) { mm.makeTranslation(x, 0.131, z); im.setMatrixAt(c++, mm); } }
+      im.count = c; g.add(im);
+      return { group: g, lx: 2.8, lz: 0.85, h: 0.17, tag: { x: -0.06, y: 0.131, z: -0.1, w: 1.0 } };
+    }
+    if (t.key === "lever") {
+      // 台座（丸座）＋ねじ＋レバー本体（台座の上に浮く）
+      const metal = this.mat(pc.color, "metal");
+      const ros = this.mesh(this.cgeo("lever-ros", () => new T.CylinderGeometry(0.44, 0.46, 0.09, 48)), metal, g); ros.position.set(-0.84, 0.045, 0);
+      const boss = this.mesh(this.cgeo("lever-boss", () => new T.CylinderGeometry(0.24, 0.26, 0.12, 36)), metal, g); boss.position.set(-0.84, 0.15, 0);
+      for (const z of [-0.37, 0.37]) {
+        const sc = this.mesh(this.cgeo("lever-screw", () => new T.SphereGeometry(0.045, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2)), this.steel(), g); sc.position.set(-0.84, 0.09, z);
+      }
+      const arm = this.mesh(this.cgeo("lever-arm", () => this.flat(this.svgShape(t.body), 0.07, 0.035)), metal, g); arm.position.y = 0.2;
+      const cap = this.mesh(this.cgeo("lever-cap", () => new T.SphereGeometry(0.16, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2)), metal, g); cap.position.set(-0.84, 0.34, 0); cap.scale.y = 0.45;
+      return { group: g, lx: 2.75, lz: 0.95, h: 0.42, tag: { x: 0.45, y: 0.341, z: 0.02, w: 0.82 } };
+    }
+    if (t.key === "bracket") {
+      // L 字の鋼板：寝た腕＋立った腕＋補強の三角（手前寄り）＋前の折り返し
+      const pm = this.mat(pc.color, "powder");
+      const hs = this.rr(2.3, 0.56, 0.05); hs.holes.push(this.hole(-0.55, 0, 0.05), this.hole(0.85, 0, 0.05));
+      const hp = this.mesh(this.cgeo("br-h", () => this.flat(hs, 0.04, 0.012, 2)), pm, g); hp.position.x = 0.03;
+      const vg = this.cgeo("br-v", () => {
+        const vs = this.rr(0.56, 1.0, 0.05); vs.holes.push(this.hole(0, 0.22, 0.05), this.hole(0, -0.12, 0.05));
+        const geo = new T.ExtrudeGeometry(vs, { depth: 0.04, bevelEnabled: true, bevelThickness: 0.012, bevelSize: 0.012, bevelSegments: 2, curveSegments: 20 });
+        geo.rotateY(Math.PI / 2); return geo;
+      });
+      const vp = this.mesh(vg, pm, g); vp.position.set(-1.14, 0.5, 0);
+      const gs = this.cgeo("br-g", () => {
+        const s = new T.Shape(); s.moveTo(0, 0); s.lineTo(0.62, 0); s.lineTo(0, 0.62); s.closePath();
+        return new T.ExtrudeGeometry(s, { depth: 0.035, bevelEnabled: false });
+      });
+      const gu = this.mesh(gs, pm, g); gu.position.set(-1.1, 0.06, 0.12);
+      const lip = this.mesh(this.cgeo("br-lip", () => new T.BoxGeometry(2.1, 0.12, 0.03)), pm, g); lip.position.set(0.12, 0.08, 0.275);
+      return { group: g, lx: 2.4, lz: 0.6, h: 1.0, tag: { x: 0.3, y: 0.065, z: -0.03, w: 0.9 } };
+    }
+    if (t.key === "case") {
+      // スマホケースの背面。ふくらみのある板＋カメラの出っぱり＋レンズ
+      const gm = this.mat(pc.color, "gloss");
+      this.mesh(this.cgeo("case-body", () => this.flat(this.rr(2.5, 1.25, 0.24), 0.09, 0.055, 6)), gm, g);
+      const bump = this.mesh(this.cgeo("case-bump", () => this.flat(this.rr(0.66, 0.66, 0.17), 0.03, 0.025, 4)), gm, g); bump.position.set(-0.82, 0.2, -0.24);
+      const lens = this.cgeo("case-lens", () => new T.CylinderGeometry(0.11, 0.115, 0.06, 32));
+      const glass = new T.MeshPhysicalMaterial({ color: 0x050608, roughness: 0.05, metalness: 0.2, clearcoat: 1, envMapIntensity: this.night ? 0.2 : 1.6 });
+      for (const [x, z] of [[-0.95, -0.37], [-0.69, -0.11]]) { const l = this.mesh(lens, glass, g); l.position.set(x, 0.27, z); }
+      const fl = this.mesh(this.cgeo("case-flash", () => new T.CylinderGeometry(0.045, 0.045, 0.04, 20)), new T.MeshStandardMaterial({ color: 0xf2efe2, roughness: 0.3, emissive: 0x332f20 }), g); fl.position.set(-0.69, 0.26, -0.39);
+      const btn = this.mesh(this.cgeo("case-btn", () => new T.BoxGeometry(0.34, 0.07, 0.04)), gm, g); btn.position.set(0.35, 0.11, -0.645);
+      return { group: g, lx: 2.6, lz: 1.32, h: 0.28, tag: { x: 0.35, y: 0.201, z: 0.18, w: 1.0 } };
+    }
+    if (t.key === "bento") {
+      // 本体＋ふた＋両端の留め具
+      const sm = this.mat(pc.color, "satin");
+      this.mesh(this.cgeo("bento-base", () => this.flat(this.rr(2.3, 1.18, 0.22), 0.32, 0.04, 4)), sm, g);
+      const lid = this.mesh(this.cgeo("bento-lid", () => this.flat(this.rr(2.4, 1.28, 0.25), 0.07, 0.045, 5)), sm, g); lid.position.y = 0.4;
+      const clip = this.cgeo("bento-clip", () => this.flat(this.rr(0.12, 0.5, 0.04), 0.3, 0.02, 2));
+      const cm = new T.MeshPhysicalMaterial({ color: 0x1b1d20, roughness: 0.35, clearcoat: 0.6, envMapIntensity: this.night ? 0.1 : 0.9 });
+      for (const x of [-1.23, 1.23]) {
+        const c = this.mesh(clip, cm, g); c.rotation.z = x < 0 ? -0.08 : 0.08; c.position.set(x, 0.2, 0);
+      }
+      const knob = this.mesh(this.cgeo("bento-knob", () => new T.CylinderGeometry(0.08, 0.09, 0.05, 24)), cm, g); knob.position.set(0.88, 0.585, -0.38);
+      return { group: g, lx: 2.55, lz: 1.3, h: 0.6, tag: { x: -0.1, y: 0.561, z: 0.1, w: 1.0 } };
+    }
+    // マグカップ（立てて置く）。旋盤で回した本体＋取っ手
+    const gz = this.mat(pc.color, "glaze"); gz.side = T.DoubleSide;
+    const R = 0.5, Hm = 1.1;
+    this.mesh(this.cgeo("mug-body", () => new T.LatheGeometry([
+      new T.Vector2(0, 0), new T.Vector2(R - 0.04, 0), new T.Vector2(R - 0.01, 0.02), new T.Vector2(R, 0.08), new T.Vector2(R + 0.02, Hm - 0.06),
+      new T.Vector2(R + 0.025, Hm - 0.02), new T.Vector2(R + 0.005, Hm), new T.Vector2(R - 0.04, Hm - 0.01), new T.Vector2(R - 0.05, 0.14), new T.Vector2(0, 0.12),
+    ], 64)), gz, g);
+    const hd = this.mesh(this.cgeo("mug-handle", () => new T.TorusGeometry(0.27, 0.065, 16, 32, Math.PI)), gz, g);
+    hd.rotation.z = -Math.PI / 2; hd.position.set(R + 0.02, Hm * 0.5, 0);
+    return { group: g, lx: 1.4, lz: 1.06, h: Hm, tag: { curved: true, r: R + 0.022, y: Hm * 0.5, w: 0.86 } };
+  },
+
+  /* 箱に紛れ込んだ異物 */
+  buildForeign(f) {
+    const T = THREE, g = new T.Group();
+    if (f.key === "bolt") {
+      const st = this.steel();
+      const head = this.mesh(new T.CylinderGeometry(0.11, 0.11, 0.08, 6), st, g); head.rotation.z = Math.PI / 2; head.position.set(-0.22, 0.11, 0);
+      const shaft = this.mesh(new T.CylinderGeometry(0.055, 0.055, 0.42, 16), st, g); shaft.rotation.z = Math.PI / 2; shaft.position.set(0.03, 0.11, 0);
+      g.rotation.y = 0.5;
+    } else if (f.key === "can") {
+      const body = this.mesh(new T.CylinderGeometry(0.13, 0.13, 0.42, 28), new T.MeshPhysicalMaterial({ color: 0x5a3417, roughness: 0.3, metalness: 0.4, clearcoat: 0.6 }), g);
+      body.rotation.z = Math.PI / 2; body.position.y = 0.13;
+      const band = this.mesh(new T.CylinderGeometry(0.132, 0.132, 0.14, 28), new T.MeshStandardMaterial({ color: 0xefe3cc, roughness: 0.5 }), g);
+      band.rotation.z = Math.PI / 2; band.position.y = 0.13;
+      for (const x of [-0.215, 0.215]) { const rim = this.mesh(new T.CylinderGeometry(0.12, 0.12, 0.02, 28), this.steel(), g); rim.rotation.z = Math.PI / 2; rim.position.set(x, 0.13, 0); }
+      g.rotation.y = -0.6;
+    } else {
+      // 軍手：手のひら＋指＋黄色い口ゴム
+      const knit = new T.MeshStandardMaterial({ color: 0xeeeadf, roughness: 0.98 });
+      const palm = this.mesh(this.flat(this.rr(0.44, 0.5, 0.14), 0.04, 0.03, 3), knit, g); palm.position.z = 0.05;
+      const fing = new T.CylinderGeometry(0.05, 0.05, 1, 12), tip = new T.SphereGeometry(0.05, 12, 8);
+      [[-0.15, 0.3], [-0.05, 0.36], [0.05, 0.36], [0.15, 0.31]].forEach(([x, len]) => {
+        const f1 = this.mesh(fing, knit, g); f1.rotation.x = Math.PI / 2; f1.scale.y = len; f1.position.set(x, 0.06, -0.2 - len / 2);
+        const t1 = this.mesh(tip, knit, g); t1.position.set(x, 0.06, -0.2 - len);
+      });
+      const th = this.mesh(fing, knit, g); th.rotation.set(Math.PI / 2, 0, 0.9); th.scale.y = 0.26; th.position.set(-0.3, 0.06, -0.02);
+      const cuff = this.mesh(this.flat(this.rr(0.46, 0.14, 0.05), 0.05, 0.02, 2), new T.MeshStandardMaterial({ color: 0xe8b33c, roughness: 0.8 }), g); cuff.position.z = 0.36;
+      g.rotation.y = 0.35; g.scale.setScalar(0.9);
+    }
+    return g;
+  },
+
   async mount(stage, box, opts) {
     const T = THREE;
     const gen = this.gen = (this.gen || 0) + 1;
-    const p = box.part, n = p.pieces.length, L = stackLayout(n);
-    const texs = await Promise.all(p.pieces.map(pc => this.texture(pc.type, pc.color)));
-    const fcan = p.foreign ? await svgToCanvas(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 160" width="1024" height="512">${p.foreign.draw(p.foreign.at[0], p.foreign.at[1])}</svg>`, 1024, 512) : null;
-    if (gen !== this.gen) return;                 // 待っている間に別の取り付けが始まった
+    await new Promise(r => setTimeout(r, 0));   // 箱の切替を同じ順に処理する
+    if (gen !== this.gen) return;
+    const p = box.part, n = p.pieces.length;
     this.stage = stage;
     stage.appendChild(this.canvas);
     this.night = !!opts.night; this.audit = !!opts.audit; this.demo = !!opts.demo;
     this.running = false; this.alarmUntil = 0;
     this.clearItems();
-    const metalish = c => ["S20", "G40", "K31", "R50", "B60", "W10"].includes(c.code);
-    const s = L.s;
-    const env = this.night ? 0.12 : 1.15;
-    let y = 0, front = null;
-    const tops = [];
-    for (let k = n - 1; k >= 0; k--) {             // 奥（下）から手前（上）へ積む
-      const pc = p.pieces[k], geo = this.geometry(pc.type);
-      const cap = new T.MeshPhysicalMaterial({
-        map: texs[k], roughness: 0.4, metalness: metalish(pc.color) ? 0.35 : 0.05,
-        clearcoat: 1, clearcoatRoughness: 0.05, envMapIntensity: env,
-      });
-      if (metalish(pc.color)) { cap.normalMap = this.flake(); cap.normalScale.set(0.12, 0.12); }
-      const sideM = new T.MeshPhysicalMaterial({ color: new T.Color(pc.color.hex).convertSRGBToLinear(), roughness: 0.42, metalness: 0.1, clearcoat: 0.8, envMapIntensity: env });
-      const piece = new T.Group();
-      const slab = new T.Mesh(geo.slab, [cap, sideM]);
-      const dome = new T.Mesh(geo.dome, cap);
-      for (const mm of [slab, dome]) { mm.castShadow = mm.receiveShadow = true; piece.add(mm); }
-      piece.rotation.x = -Math.PI / 2;
-      piece.scale.set(pc.side === "L" ? -s : s, s, s);
-      const cx = L.ox0 + k * L.dx + 160 * s, cy = L.oy0 + k * L.dy + 80 * s;
-      piece.position.set((cx - 160) / 100, y, (cy - 80) / 100);
-      y += (geo.top + 0.03) * s;
-      tops.push(y);
-      this.group.add(piece); this.items.push(piece);
-      if (k === 0) front = { piece, geo, pc };
+    // 品物を作り、ベルトの上に並べる（2 個までは前後、3〜4 個は 2×2、5 個以上は 3×2）
+    const models = p.pieces.map(pc => this.buildModel(pc));
+    const lx = Math.max(...models.map(m => m.lx)), lz = Math.max(...models.map(m => m.lz));
+    const [cols, rows] = n <= 2 ? [1, n] : n <= 4 ? [2, 2] : [3, 2];
+    const gap = 0.14, availX = 3.1, availZ = 2.0;
+    const s = Math.min(1, (availX - (cols - 1) * gap) / cols / lx, (availZ - (rows - 1) * gap) / rows / lz);
+    const pos = [];
+    models.forEach((m, k) => {
+      const col = Math.floor(k / rows), row = k % rows;
+      const x = (col - (cols - 1) / 2) * (lx * s + gap), z = ((rows - 1) / 2 - row) * (lz * s + gap);
+      const pc = p.pieces[k];
+      m.group.scale.set(pc.side === "L" ? -s : s, s, s);   // L 品は左右反転
+      m.group.position.set(x, 0, z);
+      this.group.add(m.group); this.items.push(m.group);
+      pos.push({ x, z, m, pc });
+    });
+    // 識別ラベル：手前の1個に貼る（文字は反転させない）
+    const f0 = pos[0], tg = f0.m.tag, flip = f0.pc.side === "L" ? -1 : 1;
+    const tagM = new T.MeshStandardMaterial({ map: this.tagTexture(p.pn, p.side, p.rev), roughness: 0.92, metalness: 0, envMapIntensity: this.night ? 0.05 : 0.22, polygonOffset: true, polygonOffsetFactor: -2, side: T.DoubleSide });
+    let tag;
+    if (tg.curved) {
+      const arc = tg.w / tg.r, hgt = tg.w * 140 / 540;
+      tag = new T.Mesh(new T.CylinderGeometry(tg.r * s, tg.r * s, hgt * s, 24, 1, true, -arc / 2, arc), tagM);
+      tag.position.set(f0.x, tg.y * s, f0.z);
+      tag.userData.zoom = [0, 0.35, 1.35];
+    } else {
+      tag = new T.Mesh(new T.PlaneGeometry(tg.w * s, tg.w * s * 140 / 540), tagM);
+      tag.rotation.x = -Math.PI / 2;
+      tag.position.set(f0.x + tg.x * flip * s, tg.y * s + 0.004, f0.z + tg.z * s);
+      tag.userData.zoom = [0, 1.6, 1.1];
     }
-    // 識別ラベル：手前の1個の曲面に沿わせて貼る（文字は反転させない）
-    const [tx0, ty0] = front.pc.type.tag;
-    const cxL = (tx0 + 54 - 160) / 100, cyL = (80 - (ty0 + 14)) / 100;
-    const flipT = front.pc.side === "L";
-    const ts = TAG_S[front.pc.type.key] || 1;
-    const tg = new T.PlaneGeometry(1.35 * ts / s, 0.35 * ts / s, 36, 12);
-    const tp = tg.attributes.position;
-    for (let i = 0; i < tp.count; i++) {
-      const vx = tp.getX(i), vy = tp.getY(i);
-      const px = cxL + (flipT ? -vx : vx), py = cyL + vy;
-      tp.setZ(i, front.geo.base + front.geo.height(px, py) + 0.018 / s);
-    }
-    tg.computeVertexNormals();
-    const tagM = new T.MeshStandardMaterial({ map: this.tagTexture(p.pn, p.side, p.rev), roughness: 0.92, metalness: 0, envMapIntensity: this.night ? 0.05 : 0.22, polygonOffset: true, polygonOffsetFactor: -2 });
-    const tag = new T.Mesh(tg, tagM);
-    tag.position.set(cxL, cyL, 0);
-    if (flipT) tag.scale.x = -1;
     tag.receiveShadow = true;
-    front.piece.add(tag);
+    this.group.add(tag); this.items.push(tag);
     this.tagMesh = tag; this.zoom = 0; this.zt = 0;
-    // 接地の陰（ベルトとの接点を締める）
-    const blob = new T.Mesh(new T.PlaneGeometry(1, 1), new T.MeshBasicMaterial({ map: this.blobTex(), transparent: true, depthWrite: false, opacity: this.night ? 0.4 : 0.7 }));
-    blob.rotation.x = -Math.PI / 2; blob.position.y = 0.003;
-    blob.scale.set((320 * s + (n - 1) * L.dx) / 100 * 1.12, (160 * s + (n - 1) * -L.dy) / 100 * 1.25, 1);
+    // 接地の陰
+    const fx = cols * lx * s + (cols - 1) * gap, fz = rows * lz * s + (rows - 1) * gap;
+    const blob = new T.Mesh(new T.PlaneGeometry(1, 1), new T.MeshBasicMaterial({ map: this.blobTex(), transparent: true, depthWrite: false, opacity: this.night ? 0.35 : 0.55 }));
+    blob.rotation.x = -Math.PI / 2; blob.position.y = 0.003; blob.scale.set(fx * 1.15, fz * 1.3, 1);
     this.group.add(blob); this.items.push(blob);
-    const stackTop = y;
-    // 異物：同じ 320×160 の板に描いて、部品の上に置く
+    // 異物：手前の1個の上（ラベルと反対側）に載せる
     if (p.foreign) {
-      const ft = new T.CanvasTexture(fcan); ft.encoding = T.sRGBEncoding;
-      const fm = new T.Mesh(new T.PlaneGeometry(W, H), new T.MeshStandardMaterial({ map: ft, transparent: true, alphaTest: 0.4, roughness: 0.6, envMapIntensity: this.night ? 0.1 : 0.7 }));
-      fm.rotation.x = -Math.PI / 2; fm.position.y = stackTop + 0.05;
-      fm.castShadow = true;
-      fm.customDepthMaterial = new T.MeshDepthMaterial({ depthPacking: T.RGBADepthPacking, map: ft, alphaTest: 0.4 });
-      this.group.add(fm); this.items.push(fm);
+      const fo = this.buildForeign(p.foreign);
+      // ラベルの反対側に置く
+      const side = tg.curved ? 1 : (tg.x > 0 ? -1 : 1);
+      fo.position.set(f0.x + side * lx * s * 0.3 * flip, f0.m.h * s * (f0.pc.type.key === "mug" ? 1 : 0.92) + 0.01, f0.z + lz * s * 0.12);
+      this.group.add(fo); this.items.push(fo);
     }
     this.applyLighting();
     this.pose = { x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0, vis: true };
@@ -1333,8 +1490,12 @@ const View3D = {
     const w = Math.max(1, this.stage.clientWidth), h = Math.max(1, this.stage.clientHeight || Math.round(w / 1.8));
     this.r.setSize(w, h, false);
     this.cam.aspect = w / h;
-    // 部品が横幅に収まるよう、ベルト面での見える幅から画角を決める
-    const d = this.cam.position.distanceTo(new THREE.Vector3(0, 0, 0.18));
+    // 縦長の画面ほどカメラを高くして、ベルトの奥行きで画面を埋める（横長 32°〜縦長 54°）
+    const tq = Math.min(1, Math.max(0, (2.0 - this.cam.aspect) / 1.15));
+    const el = (32 + 22 * tq) * Math.PI / 180, d = 5.3;
+    this.look = this.look || new THREE.Vector3(0, 0.2, 0.05);
+    this.camBase = new THREE.Vector3(0, this.look.y + d * Math.sin(el), this.look.z + d * Math.cos(el));
+    this.cam.position.copy(this.camBase); this.cam.lookAt(this.look);
     const vw = Math.max(this.viewW, this.cam.aspect * 1.75);
     const hf = 2 * Math.atan((vw / 2) / d);
     this.cam.fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(hf / 2) / this.cam.aspect));
@@ -1391,10 +1552,11 @@ const View3D = {
     this.dust.material.opacity = this.night ? 0.22 : 0.38;
     // ルーペ：カメラが識別ラベルに寄って追いかける
     this.zt += ((this.zoom || 0) - this.zt) * Math.min(1, dt * 9);
-    if (!this.camBase) { this.camBase = this.cam.position.clone(); this.lookBase = new THREE.Vector3(0, 0, 0.18); this.v1 = new THREE.Vector3(); this.v2 = new THREE.Vector3(); this.v3 = new THREE.Vector3(); }
+    if (!this.v1) { this.lookBase = this.look || new THREE.Vector3(0, 0.2, 0.05); this.v1 = new THREE.Vector3(); this.v2 = new THREE.Vector3(); this.v3 = new THREE.Vector3(); }
     if (this.zt > 0.002 && this.tagMesh) {
       this.tagMesh.getWorldPosition(this.v1);
-      this.v2.copy(this.v1).add(this.v3.set(0, 1.7, 1.25));
+      const zo = this.tagMesh.userData.zoom || [0, 1.6, 1.1];
+      this.v2.copy(this.v1).add(this.v3.set(zo[0], zo[1], zo[2]));
       this.cam.position.lerpVectors(this.camBase, this.v2, this.zt);
       this.v2.lerpVectors(this.lookBase, this.v1, this.zt);
       this.cam.lookAt(this.v2);
@@ -1685,8 +1847,8 @@ function start(dayIdx) {
   $toasts.innerHTML = "";
   // 3D の塗装テクスチャを先に作っておく（箱の切替で待たないように）
   if (View === View3D) {
-    for (const b of S.shift.boxes) for (const pc of b.part.pieces) View3D.texture(pc.type, pc.color).catch(() => {});
-    PARTS.forEach((t, i) => setTimeout(() => View3D.geometry(t), 300 + i * 120));
+    // 品物の形を先に作っておく（最初の箱で待たないように）
+    PARTS.forEach((t, i) => setTimeout(() => { try { View3D.buildModel({ type: t, side: t.sided ? "R" : null, color: COLORS[0] }); } catch (e) {} }, 200 + i * 80));
   }
   enterBox();
 }

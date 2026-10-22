@@ -25,7 +25,7 @@ CLAUDE.md                   Claude 向けのコミット規則
 | シフトの組み立て | `makeShift(day)`・`makeBox()`：異常の出し方、静かな区間、版の切替、監査区間 |
 | 効果音 | Web Audio による効果音と環境音（`SND`） |
 | 描画 | 帳票（指示書・現品票）と SVG の現品 |
-| 現品の表示 | `View3D`（three.js）と `ViewSVG`（2D）。同じ操作（mount・setProgress・fly・fall・reveal）で入れ替えられる |
+| 現品の表示 | `View3D`（three.js）と `ViewSVG`（2D）。同じ操作（mount・setProgress・fly・fall・reveal）で入れ替えられる。3D の品物は `buildModel()` が品物ごとに組み立てる（インソールは厚みのあるフォーム、レバーハンドルは丸座＋レバー、棚受け金具は L 字の鋼板、スマホケースはカメラの出っぱり付き、弁当箱はふた＋留め具、マグカップは旋盤形状＋取っ手）。異物は `buildForeign()` |
 | 進行 | 箱の流れ、判定、クレーム、監査、一時停止、結果、タイトル |
 
 `/* ====== 効果音` より前は画面に触れないので、Node から読み込んで検算できます（tests/test.js がそうしている）。
