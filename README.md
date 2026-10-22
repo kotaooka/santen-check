@@ -20,7 +20,7 @@
 <td align="center"><img src="docs/screenshots/03-catch.png" width="200" alt="異常を止めた"><br>4個のうち1個だけ左右違い</td>
 </tr>
 <tr>
-<td align="center"><img src="docs/screenshots/04-audit.png" width="200" alt="客先監査"><br>17箱目からは客先監査</td>
+<td align="center"><img src="docs/screenshots/04-audit.png" width="200" alt="客先監査"><br>11箱目からは客先監査</td>
 <td align="center"><img src="docs/screenshots/05-night.png" width="200" alt="夜勤"><br>夜勤は懐中電灯で照らす</td>
 <td></td>
 </tr>
@@ -63,7 +63,7 @@
 | 6 | 新人の箱詰め | 異常が多い |
 | 7 | 客先監査週間 | クレーム 2 件で出荷停止。監査員は本気 |
 
-2日目からは、17箱目で **客先監査** が始まります。監査中は出荷の正誤もその場で分かります。正しい判定で監査員の疑いを削りきれば合格、指摘 3 回で不合格です。
+1日は16箱。2日目からは、11箱目で **客先監査** が始まります。監査中は出荷の正誤もその場で分かります。正しい判定で監査員の疑いを削りきれば合格、指摘 3 回で不合格です。
 
 ## 💡 コツ
 

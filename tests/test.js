@@ -41,7 +41,7 @@ for (const [di, day] of G.DAYS.entries()) {
       check(visible, `見えない異常：${JSON.stringify(b.defect)}`);
       check(p.pieces.length === p.count, "現品の個数と絵の数が違う");
     });
-    // 静かな区間（QUIET 箱続けて正常）がある
+    // 静かな区間（QUIET 箱続けて正常）がある（監査区間より前）
     const end = day.boss ? G.BOSS_FROM : G.BOXES;
     let run = 0, ok = false;
     for (let i = 0; i < end; i++) { run = sh.boxes[i].defect ? 0 : run + 1; if (run >= G.QUIET) ok = true; }
@@ -51,7 +51,7 @@ for (const [di, day] of G.DAYS.entries()) {
       const most = sh.boxes.slice(G.BOSS_FROM).reduce((a, b) => a + (b.defect ? G.DMG_CATCH : G.DMG_SHIP), 0);
       const hp = Math.round(most * (day.bossK || 0.8));
       minMargin = Math.min(minMargin, most - hp);
-      check(sh.boxes.slice(G.BOSS_FROM).filter(b => b.defect).length >= 3, "監査区間の異常が3つ未満");
+      check(sh.boxes.slice(G.BOSS_FROM).filter(b => b.defect).length === 3, "監査区間の異常が3つでない");
     }
   }
   check(noQuiet === 0, `第${di + 1}日：静かな区間のないシフトが ${noQuiet} 件`);

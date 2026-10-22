@@ -358,6 +358,9 @@ body {
   background: linear-gradient(180deg, #8e1a12, #5e0f0a); border: 1px solid #ff6b5c;
   box-shadow: 0 0 30px rgba(239,84,70,.5), 0 10px 30px rgba(0,0,0,.6);
 }
+.toast.ok { background: linear-gradient(180deg, #1d5a3e, #123827); border-color: #4cc38a; box-shadow: 0 0 24px rgba(76,195,138,.35), 0 10px 30px rgba(0,0,0,.6); }
+.toast.info { background: linear-gradient(180deg, #4d3c16, #30250c); border-color: #d8b25a; box-shadow: 0 0 24px rgba(216,178,90,.3), 0 10px 30px rgba(0,0,0,.6); }
+.toast.ok, .toast.info { font-size: 13px; padding: 8px 12px; }
 .toast b { display: block; font-family: var(--f-display); font-size: 16px; letter-spacing: .1em; }
 .toast .m { font-family: var(--f-mono); font-weight: 600; float: right; }
 @media (prefers-reduced-motion: no-preference) {
@@ -487,10 +490,10 @@ h3 { margin: 4px 0 0; font-family: var(--f-display); font-weight: 800; font-size
 
 "use strict";
 /* ====== 設定 ====== */
-const BOXES = 24;                       // 1日（1シフト）の箱数
-const LIMITS = [16, 14, 12, 11, 10];    // ライン速度 1〜5 の持ち時間（秒）
+const BOXES = 16;                       // 1日（1シフト）の箱数
+const LIMITS = [12, 11, 10, 9, 8];      // ライン速度 1〜5 の持ち時間（秒）
 const MULT = [1, 1.25, 1.5, 1.75, 2];   // ライン速度ごとの得点倍率
-const QUIET = 8;                        // 異常が来ない区間の長さ
+const QUIET = 5;                        // 異常が来ない区間の長さ
 const CLAIM = -800;                     // 市場クレーム1件の減点
 const CATCH = 300;                      // 異常を赤箱で止めたときの基本点
 const SHIP = 100;                       // 良品を出荷したときの基本点
@@ -498,7 +501,7 @@ const OVER = -150;                      // 過検出の減点
 const STOP = -150;                      // ライン停止の減点
 const SWIPE = 70;                       // これ以上横に動かして離すと箱に入る（px）
 /* ボス：客先監査。BOSS_FROM 箱目から始まり、正しい判定で監査員の「疑い」を削る */
-const BOSS_FROM = 16;
+const BOSS_FROM = 10;
 const DMG_CATCH = 25;                   // 異常を止めたときに削る量
 const DMG_SHIP = 10;                    // 良品を正しく出荷したときに削る量
 const AUDIT_MAX = 3;                    // この回数の指摘で監査不合格
@@ -510,12 +513,12 @@ const SOUND_KEY = "santen-check-sound";
 /* 7日間。stageAt は難易度の段階が上がる箱番号（0始まり） */
 const DAYS = [
   { name: "立上げ", sub: "まずは三点を見比べる目を作る", rate: .22, stageAt: [0, 99, 99], switch: false, startLvl: 1, claimMax: 3, boss: false },
-  { name: "通常稼働", sub: "版の切替がやってくる", rate: .25, stageAt: [0, 6, 99], switch: true, startLvl: 1, claimMax: 3, boss: true },
-  { name: "改版ラッシュ", sub: "旧品の在庫が混ざりやすい", rate: .28, stageAt: [0, 4, 12], switch: true, oldProb: .75, startLvl: 1, claimMax: 3, boss: true },
-  { name: "夜勤", sub: "照明が切れている。指でなぞって照らす", rate: .28, stageAt: [0, 6, 14], switch: true, startLvl: 1, claimMax: 3, boss: true, night: true },
-  { name: "繁忙期", sub: "ライン速度 3 から始まる", rate: .28, stageAt: [0, 5, 12], switch: true, startLvl: 3, claimMax: 3, boss: true },
-  { name: "新人の箱詰め", sub: "異常が多い。止めて止めて止めまくる", rate: .4, stageAt: [0, 3, 10], switch: true, startLvl: 2, claimMax: 3, boss: true },
-  { name: "客先監査週間", sub: "クレーム 2 件で出荷停止。監査員は本気", rate: .32, stageAt: [0, 2, 8], switch: true, startLvl: 2, claimMax: 2, boss: true, bossK: .95 },
+  { name: "通常稼働", sub: "版の切替がやってくる", rate: .25, stageAt: [0, 4, 99], switch: true, startLvl: 1, claimMax: 3, boss: true },
+  { name: "改版ラッシュ", sub: "旧品の在庫が混ざりやすい", rate: .28, stageAt: [0, 3, 8], switch: true, oldProb: .75, startLvl: 1, claimMax: 3, boss: true },
+  { name: "夜勤", sub: "照明が切れている。指でなぞって照らす", rate: .28, stageAt: [0, 4, 9], switch: true, startLvl: 1, claimMax: 3, boss: true, night: true },
+  { name: "繁忙期", sub: "ライン速度 3 から始まる", rate: .28, stageAt: [0, 3, 8], switch: true, startLvl: 3, claimMax: 3, boss: true },
+  { name: "新人の箱詰め", sub: "異常が多い。止めて止めて止めまくる", rate: .4, stageAt: [0, 2, 7], switch: true, startLvl: 2, claimMax: 3, boss: true },
+  { name: "客先監査週間", sub: "クレーム 2 件で出荷停止。監査員は本気", rate: .32, stageAt: [0, 1, 5], switch: true, startLvl: 2, claimMax: 2, boss: true, bossK: .95 },
 ];
 
 /* ====== 品物の絵（320×160、R を基準に描き L は左右反転） ====== */
@@ -642,7 +645,7 @@ function makeShift(day) {
     type: mType, side: mSide, pn: makePn(mType, mSide), color: pick(COLORS), qty: pick(mType.qtys),
     oldRev, newRev: REVS[REVS.indexOf(oldRev) + 1],
   };
-  const switchAt = day.switch ? 7 + rnd(4) : 999;
+  const switchAt = day.switch ? 5 + rnd(3) : 999;
   const inBoss = i => day.boss && i >= BOSS_FROM;
   const flags = Array.from({ length: BOXES }, (_, i) => chance(inBoss(i) ? 0.5 : day.rate));
   const isMain = Array.from({ length: BOXES }, () => chance(0.4));
@@ -663,9 +666,14 @@ function makeShift(day) {
   if (!(forceOld < qs || forceOld > qs + QUIET)) forceOld = -1;
   for (let i = qs; i < qs + QUIET; i++) flags[i] = false;
   flags[qs + QUIET] = true;
-  // 監査区間には異常を最低3つ
+  // 監査区間の異常の数をそろえる
   if (day.boss) {
     while (flags.slice(BOSS_FROM).filter(Boolean).length < 3) flags[BOSS_FROM + rnd(BOXES - BOSS_FROM)] = true;
+    // 監査区間（6 箱）の異常はちょうど 3 つ。全部赤箱では監査に合格できないようにする
+    while (flags.slice(BOSS_FROM).filter(Boolean).length > 3) {
+      const i = BOSS_FROM + rnd(BOXES - BOSS_FROM);
+      if (flags[i] && i !== forceOld) flags[i] = false;
+    }
   }
   const boxes = flags.map((f, i) => makeBox(i, f, isMain[i] && i !== 2, main, switchAt, i === forceOld, day));
   return { main, switchAt, boxes };
@@ -1868,11 +1876,17 @@ async function enterBox() {
   await renderBox();
   if (S.i === 0) {
     SND.notice();
-    bigText(`第${S.dayIdx + 1}日`, S.day.sub, "intro", 2600, S.day.name).then(run);
+    bigText(`第${S.dayIdx + 1}日`, S.day.sub, "intro", 1500, S.day.name).then(run);
   } else if (S.audit && S.audit.active && S.i === BOSS_FROM) {
     SND.boss(); buzz([300, 100, 300]);
-    bigText("客先監査", "監査員　重箱 隅子 が現れた", "boss", 2800).then(run);
-  } else if (S.i === S.shift.switchAt) showNotice();
+    bigText("客先監査", "監査員　重箱 隅子 が現れた", "boss", 1600).then(run);
+  } else if (S.i === S.shift.switchAt) {
+    // 版の切替は帯で知らせるだけ（ラインは止めない）
+    const m = S.shift.main;
+    SND.notice();
+    flashToast("info", "班長より：この箱から版が切り替わります", `${m.type.name}${m.side ? `（${m.side}）` : ""}　${m.pn}　版 ${m.oldRev} → ${m.newRev}`, 3200);
+    run();
+  }
   else run();
 }
 
@@ -2042,20 +2056,39 @@ function judge(choice) {
     if (up) SND.levelup();
     return;
   }
-  if (box.defect) markDefect(box);
   const good = kind === "hit";
-  if (good) { SND.catch(S.combo); buzz(40); if (up) setTimeout(() => SND.levelup(), 250); floatPts($binNG, `+${pts}`, up ? `ライン速度 ${S.lvl}` : ""); }
-  else if (kind === "timeout") { SND.stopLine(); buzz([200, 100, 200]); }
-  else { SND.bad(); buzz([80, 60, 80]); }
   // 監査員の疑いの増減は、監査中だけ表示する
   const hit = !a ? "" : dmg > 0 ? `<div class="dmg">監査員の疑い −${dmg}</div>` : dmg < 0 ? `<div class="dmg">監査員の疑い ＋${-dmg}</div>` : "";
+  if (good) {
+    // 正解は止めずに次の箱へ。得点と理由は上に一瞬出す
+    SND.catch(S.combo); buzz(40); if (up) setTimeout(() => SND.levelup(), 250);
+    floatPts(choice === "ok" ? $binOK : $binNG, `+${pts}`, up ? `ライン速度 ${S.lvl}` : (S.combo >= 3 ? `連続 ${S.combo}` : ""));
+    if (box.defect) flashToast("ok", title, describe(box) + (a && dmg > 0 ? `　監査員の疑い −${dmg}` : ""), 2000);
+    else if (a) flashToast("ok", "監査員が確認しました", `監査員の疑い −${dmg}`, 1200);
+    S.next = null;
+    S.timer = setTimeout(next, 420);
+    return;
+  }
+  if (box.defect) markDefect(box);
+  if (kind === "timeout") { SND.stopLine(); buzz([200, 100, 200]); }
+  else { SND.bad(); buzz([80, 60, 80]); }
   bubble(good ? "good" : "bad", `
       <div class="mark">${good ? "○" : "✕"}</div>
       <div class="what">${title}</div>
       <div class="why">${esc(describe(box))}</div>
       ${hit}
       <div class="pts">${pts >= 0 ? "+" : ""}${pts} 点${up ? `　<span class="lvup">ライン速度 ${S.lvl}</span>` : ""}</div>
-      <div class="next">タップで次へ</div>`, good ? 1150 : 3400);
+      <div class="next">タップで次へ</div>`, 2000);
+}
+
+/* 画面上部の短い知らせ（操作は止めない）。kind：ok（正解）・info（班長の連絡） */
+function flashToast(kind, head, body, ms = 1700) {
+  for (const t of $toasts.querySelectorAll(".toast." + kind)) t.remove();
+  const el = document.createElement("div");
+  el.className = "toast " + kind;
+  el.innerHTML = `<b>${esc(head)}</b>${body ? esc(body) : ""}`;
+  $toasts.appendChild(el);
+  setTimeout(() => el.remove(), ms);
 }
 
 /* 得点が箱から跳ね上がる表示（操作は止めない） */
@@ -2102,7 +2135,7 @@ function next() {
   if (after === "pass") {
     $bins.classList.add("off");
     SND.win(); buzz([60, 40, 60, 40, 200]);
-    bigText("監査　合格", `指摘 ${S.audit.strikes} 件　＋${BOSS_BONUS.toLocaleString("ja-JP")} 点`, "gold", 3000).then(go);
+    bigText("監査　合格", `指摘 ${S.audit.strikes} 件　＋${BOSS_BONUS.toLocaleString("ja-JP")} 点`, "gold", 1600).then(go);
   } else go();
 }
 
@@ -2120,9 +2153,9 @@ async function finish() {
   const last = S.dayIdx === DAYS.length - 1;
 
   // 決着の大きな文字
-  if (S.halted || S.claimCount >= S.day.claimMax) { SND.lose(); await bigText("出荷停止", `市場クレーム ${S.claimCount} 件`, "red", 3000); }
-  else if (S.auditFailed) { SND.lose(); await bigText("監査　不合格", S.audit && S.audit.strikes >= AUDIT_MAX ? `指摘 ${S.audit.strikes} 件` : "監査員の疑いを晴らせなかった", "red", 3000); }
-  else { SND.end(); await bigText(last ? "全工程　完了" : `第${S.dayIdx + 1}日　完了`, last ? "七日間、流出を食い止めた" : "", "gold", 2600); }
+  if (S.halted || S.claimCount >= S.day.claimMax) { SND.lose(); await bigText("出荷停止", `市場クレーム ${S.claimCount} 件`, "red", 1700); }
+  else if (S.auditFailed) { SND.lose(); await bigText("監査　不合格", S.audit && S.audit.strikes >= AUDIT_MAX ? `指摘 ${S.audit.strikes} 件` : "監査員の疑いを晴らせなかった", "red", 1700); }
+  else { SND.end(); await bigText(last ? "全工程　完了" : `第${S.dayIdx + 1}日　完了`, last ? "七日間、流出を食い止めた" : "", "gold", 1700); }
 
   // 進行と自己ベストの保存
   let best = null, unlocked = 0;
@@ -2226,7 +2259,7 @@ function title() {
         <li><span class="sn">2</span><b class="k">右へ → 出荷</b><span class="sd">三つとも合っていれば段ボールへ</span></li>
         <li><span class="sn">3</span><b class="r">← 左へ 赤箱</b><span class="sd">一つでも違えば止める</span></li>
       </ol>
-      <p class="fine">出荷した箱の正誤はその場では出ません。異常品を出すと数箱あとに<b class="r">市場クレーム</b>が届き、たまると出荷停止。2日目からは17箱目で<b>客先監査</b>が始まります。現品をタップすると識別ラベルを拡大できます。</p>
+      <p class="fine">出荷した箱の正誤はその場では出ません。異常品を出すと数箱あとに<b class="r">市場クレーム</b>が届き、たまると出荷停止。2日目からは11箱目で<b>客先監査</b>が始まります。現品をタップすると識別ラベルを拡大できます。</p>
       <ol class="days">
         ${DAYS.map((d, i) => {
           if (i > unlocked + 1) return "";
