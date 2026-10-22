@@ -17,7 +17,7 @@
 <tr>
 <td align="center"><img src="docs/screenshots/01-title.png" width="200" alt="タイトル画面"><br>7日間を順に解放</td>
 <td align="center"><img src="docs/screenshots/02-play.png" width="200" alt="指示書・現品票・現品"><br>指示書と現品票の行は横一列</td>
-<td align="center"><img src="docs/screenshots/03-catch.png" width="200" alt="レバーハンドル（L）"><br>左右は品番の末尾 R / L でも見分ける</td>
+<td align="center"><img src="docs/screenshots/03-catch.png" width="200" alt="異常を止めた"><br>4個のうち1個だけ左右違い</td>
 </tr>
 <tr>
 <td align="center"><img src="docs/screenshots/04-audit.png" width="200" alt="客先監査"><br>17箱目からは客先監査</td>
