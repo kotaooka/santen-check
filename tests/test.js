@@ -6,7 +6,7 @@ const path = require("path");
 
 const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 // 2つ目の <script>（本体）のうち、画面に触れない「問題の作り方」までを取り出して読み込む
-const body = html.split("<script>\n")[1].split("</script>")[0];
+const body = html.split("<script>\n").map(x => x.split("</script>")[0]).find(x => x.includes("function makeShift"));
 const pure = body.split("/* ====== 効果音")[0];
 const G = new Function(pure + "\nreturn { makeShift, describe, category, DAYS, BOXES, BOSS_FROM, QUIET, DMG_CATCH, DMG_SHIP, CLAIM, CATCH, SHIP, OVER, MULT, PARTS, COLORS };")();
 

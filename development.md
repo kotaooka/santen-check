@@ -18,7 +18,7 @@ CLAUDE.md                   Claude 向けのコミット規則
 外部から読み込むのは Google Fonts だけです（一度読めば Service Worker が保存し、オフラインでも使う）。
 
 - three.js r128：リポジトリに同梱（js/three.min.js）。現品とコンベアの 3D 描画に使い、WebGL が使えないときは SVG の 2D 表示に切り替わる
-- Google Fonts（BIZ UDPGothic、Shippori Mincho、IBM Plex Mono）
+- Google Fonts（BIZ UDPGothic、IBM Plex Mono）。色と字体は QC Workbench の DESIGN.md にそろえ、表示の切替（自動・ライト・ダーク）は共通の保存キー `qc-workbench-theme` を使う
 
 ## index.html の中身（スクリプト）
 

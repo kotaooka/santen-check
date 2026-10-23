@@ -5,16 +5,18 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
 W, H = 1200, 630
-SERIF = "/usr/share/fonts/opentype/noto/NotoSerifCJK-Black.ttc"   # 番号 0 が日本語
+BOLD = "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc"    # 太字のゴシック（番号 0 が日本語）
 SANS = "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"
 
-# 背景：暗い工場の夜（上に青み、下に暖色のぼかし）
-img = Image.new("RGB", (W, H), (7, 9, 12))
+# 背景：QC Workbench の青（#1d5c96）
+img = Image.new("RGB", (W, H), (29, 92, 150))
 glow = Image.new("RGB", (W, H), (0, 0, 0))
 g = ImageDraw.Draw(glow)
-g.ellipse((-200, -420, 900, 300), fill=(28, 37, 48))
-g.ellipse((500, 380, 1500, 1000), fill=(34, 24, 16))
-img = Image.blend(img, glow.filter(ImageFilter.GaussianBlur(120)), 0.9)
+# 下に向けて少し暗くする（DESIGN.md 1.5）
+for y in range(H):
+    k = y / H
+    g.line((0, y, W, y), fill=(int(29 - 9 * k), int(92 - 26 * k), int(150 - 40 * k)))
+img = glow
 
 # 右側：ゲーム画面を2枚、少し重ねて置く
 def phone(path, h):
@@ -34,20 +36,20 @@ for path, x, y, h in [(ROOT / "docs/screenshots/03-catch.png", 870, 58, 540), (R
 
 # 左側：題字と一文
 d = ImageDraw.Draw(img)
-gold = (216, 178, 90)
-title = ImageFont.truetype(SERIF, 112, index=0)
+white = (255, 255, 255)
+title = ImageFont.truetype(BOLD, 112, index=0)
 x = 64
 for i, ch in enumerate("三点照合"):
-    d.text((x + i * 128, 120), ch, font=title, fill=gold)
-d.line((66, 270, 560, 270), fill=(216, 178, 90), width=2)
-sub = ImageFont.truetype(SERIF, 34, index=0)
-d.text((66, 294), "三つが揃わぬ箱を、", font=sub, fill=(236, 231, 220))
-d.text((66, 344), "ひとつも外へ出すな。", font=sub, fill=(236, 231, 220))
+    d.text((x + i * 124, 120), ch, font=title, fill=white)
+d.line((66, 270, 560, 270), fill=(255, 255, 255), width=2)
+sub = ImageFont.truetype(BOLD, 34, index=0)
+d.text((66, 294), "三つがそろわない箱は、", font=sub, fill=white)
+d.text((66, 344), "外へ出さない。", font=sub, fill=white)
 body = ImageFont.truetype(SANS, 25, index=0)
-for i, line in enumerate(["作業指示書・現品票・現品を見比べて", "出荷か赤箱へ。品質保証の照合ゲーム"]):
-    d.text((66, 432 + i * 40), line, font=body, fill=(170, 176, 184))
+for i, line in enumerate(["作業指示書・現品票・現品を見比べて", "出荷するか止めるか。品質保証の照合ゲーム"]):
+    d.text((66, 432 + i * 40), line, font=body, fill=(214, 228, 242))
 small = ImageFont.truetype(SANS, 22, index=0)
-d.text((66, 556), "kotaooka.github.io/santen-check", font=small, fill=(141, 150, 160))
+d.text((66, 556), "kotaooka.github.io/santen-check", font=small, fill=(190, 210, 230))
 
 img.save(ROOT / "og.png", optimize=True)
 print("og.png", img.size)
