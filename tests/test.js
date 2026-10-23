@@ -96,5 +96,13 @@ for (const [di, day] of G.DAYS.entries()) {
   }
 }
 
+// オフライン：sw.js が事前に保存するファイルが実在し、three.js を同梱の版から読んでいる
+const root = path.join(__dirname, "..");
+const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
+const assets = [...sw.match(/const ASSETS = \[([\s\S]*?)\];/)[1].matchAll(/'([^']+)'/g)].map(m => m[1]);
+for (const a of assets) if (a !== "./") check(fs.existsSync(path.join(root, a)), `sw.js の ASSETS にあるファイルがない：${a}`);
+check(html.includes('<script src="js/three.min.js"></script>') && !html.includes("cdnjs.cloudflare.com"), "three.js を同梱の版から読んでいない");
+check(html.includes('rel="manifest"') && html.includes('serviceWorker.register("sw.js")'), "manifest か Service Worker の登録がない");
+
 if (fail) { console.error(`\n${fail} 件の不一致`); process.exit(1); }
 console.log("\nすべて一致");

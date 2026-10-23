@@ -4,6 +4,10 @@
 
 ```
 index.html                  ゲーム本体（HTML・CSS・JS を1ファイルにまとめている）
+sw.js                       オフライン用の Service Worker（更新したら VERSION を上げる）
+manifest.webmanifest        ホーム画面に追加したときの名前・色・アイコン
+js/three.min.js             three.js r128（MIT。オフラインでも 3D で遊べるよう同梱）
+icons/                      アプリのアイコン（tools/make_icons.py で作る）
 og.png                      SNS 共有用の画像（1200×630）
 docs/screenshots/           README 用の画面写真
 tests/test.js               問題の作り方とルールの検算（node で実行）
@@ -11,9 +15,9 @@ tests/test.js               問題の作り方とルールの検算（node で�
 CLAUDE.md                   Claude 向けのコミット規則
 ```
 
-外部から読み込むのは次の2つだけです。
+外部から読み込むのは Google Fonts だけです（一度読めば Service Worker が保存し、オフラインでも使う）。
 
-- three.js r128（cdnjs）：現品とコンベアの 3D 描画。読み込めないときや WebGL が使えないときは SVG の 2D 表示に切り替わる
+- three.js r128：リポジトリに同梱（js/three.min.js）。現品とコンベアの 3D 描画に使い、WebGL が使えないときは SVG の 2D 表示に切り替わる
 - Google Fonts（BIZ UDPGothic、Shippori Mincho、IBM Plex Mono）
 
 ## index.html の中身（スクリプト）
@@ -55,4 +59,4 @@ node tests/test.js
 
 ## 公開
 
-GitHub Pages（main ブランチのルート）で公開しています。
+GitHub Pages（main ブランチのルート）で公開しています。ページ本体・アイコンはネットワーク優先、three.js はキャッシュ優先、Google Fonts は一度取得したらキャッシュから返します。公開ファイルを変えたら sw.js の VERSION を上げます。
