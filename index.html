@@ -35,7 +35,7 @@ img { max-width: 100%; }
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Shippori+Mincho:wght@700;800&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
 /* 構成：暗い工場の夜。上に状況、指示書（紙）と現品票（段ボールの白ラベル）を机に並べ、
-   その下にコンベアの 3D 描画。画面下に赤箱と段ボール。ゲームなので暗い一つの見た目に固定する */
+   その下にコンベアの 3D 描画。画面下に止める箱（赤）と段ボール。ゲームなので暗い一つの見た目に固定する */
 :root {
   color-scheme: dark;
   --bg: #07090c;
@@ -292,7 +292,11 @@ body {
 .sep { opacity: .5; margin: 0 1px; }
 .tail { margin-left: 2px; text-decoration: underline 2px; text-underline-offset: 3px; }
 /* 見切れ防止：行の中身は1行（品名は2行まで）に収める */
-.rows { grid-template-rows: 2.3em 2.9em 2.9em 2em 2.2em; }
+.rows { grid-template-rows: 2.3em 2.9em 2.9em 2.2em; }
+.rows[data-card="sheet"] { grid-template-rows: 2.3em 2.9em 2.9em 2.2em 4.2em; }
+.row.sample dd { display: flex; align-items: center; height: 100%; }
+.sample-img { display: block; height: 100%; max-height: 3.8em; width: auto; max-width: 100%; }
+.cc { display: inline-block; width: .95em; height: .95em; border-radius: 3px; margin-right: 5px; vertical-align: -0.1em; box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); }
 .row[data-f="pn"] dd { white-space: nowrap; }
 .row[data-f="name"] dd { word-break: keep-all; overflow-wrap: anywhere; }
 .row dd .cname { white-space: nowrap; }
@@ -315,7 +319,7 @@ body {
 .stage::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2; box-shadow: inset 0 0 60px rgba(0,0,0,.65); }
 .stage.hit { box-shadow: 0 0 0 2px var(--ng), 0 0 26px rgba(239,84,70,.45), var(--shadow); }
 .wrap.audit .stage:not(.hit) { box-shadow: 0 0 0 1px rgba(200,57,45,.7), 0 0 22px rgba(200,57,45,.25), var(--shadow); }
-/* SVG 版（WebGL が使えないとき） */
+/* SVG 表示（WebGL が使えないとき） */
 .stage:has(.rail) { background: var(--mat); padding-bottom: 26px; overflow: visible; display: flex; flex-direction: column; justify-content: center; }
 .belt { position: absolute; left: 0; right: 0; bottom: 6px; height: 22px; background: repeating-linear-gradient(90deg, var(--belt-a) 0 14px, var(--belt-b) 14px 28px); border-block: 2px solid #000; }
 @media (prefers-reduced-motion: no-preference) { .belt.run { animation: belt var(--belt-dur) linear infinite; } @keyframes belt { to { background-position: 28px 0; } } }
@@ -483,8 +487,8 @@ h3 { margin: 4px 0 0; font-family: var(--f-display); font-weight: 800; font-size
 
 <div class="bins" id="bins" hidden>
   <div class="in">
-    <button class="bin red" id="binNG" type="button" aria-label="赤箱に入れる（NG）">
-      <span class="lid"></span><span class="body"><b>✕ 赤箱</b><small>← 不良・保留</small></span>
+    <button class="bin red" id="binNG" type="button" aria-label="止める（不良・誤品・表示違い）">
+      <span class="lid"></span><span class="body"><b>✕ 止める</b><small>← 不良・誤品・表示違い</small></span>
     </button>
     <button class="bin kraft" id="binOK" type="button" aria-label="段ボールに入れる（OK）">
       <span class="lid"></span><span class="body"><b>○ 出荷</b><small>段ボール →</small></span>
@@ -502,7 +506,7 @@ const LIMITS = [12, 11, 10, 9, 8];      // ライン速度 1〜5 の持ち時間
 const MULT = [1, 1.25, 1.5, 1.75, 2];   // ライン速度ごとの得点倍率
 const QUIET = 5;                        // 異常が来ない区間の長さ
 const CLAIM = -800;                     // 市場クレーム1件の減点
-const CATCH = 300;                      // 異常を赤箱で止めたときの基本点
+const CATCH = 300;                      // 異常を止めたときの基本点
 const SHIP = 100;                       // 良品を出荷したときの基本点
 const OVER = -150;                      // 過検出の減点
 const STOP = -150;                      // ライン停止の減点
@@ -520,8 +524,8 @@ const SOUND_KEY = "santen-check-sound";
 /* 7日間。stageAt は難易度の段階が上がる箱番号（0始まり） */
 const DAYS = [
   { name: "立上げ", sub: "まずは三点を見比べる目を作る", rate: .22, stageAt: [0, 99, 99], switch: false, startLvl: 1, claimMax: 3, boss: false },
-  { name: "通常稼働", sub: "版の切替がやってくる", rate: .25, stageAt: [0, 4, 99], switch: true, startLvl: 1, claimMax: 3, boss: true },
-  { name: "改版ラッシュ", sub: "旧品の在庫が混ざりやすい", rate: .28, stageAt: [0, 3, 8], switch: true, oldProb: .75, startLvl: 1, claimMax: 3, boss: true },
+  { name: "通常稼働", sub: "11 箱目から客先監査が来る", rate: .25, stageAt: [0, 4, 99], switch: true, startLvl: 1, claimMax: 3, boss: true },
+  { name: "色ちがいラッシュ", sub: "似た色が混ざりやすい。見本と見比べろ", rate: .28, stageAt: [0, 2, 8], switch: true, colorRush: true, startLvl: 1, claimMax: 3, boss: true },
   { name: "夜勤", sub: "照明が切れている。指でなぞって照らす", rate: .28, stageAt: [0, 4, 9], switch: true, startLvl: 1, claimMax: 3, boss: true, night: true },
   { name: "繁忙期", sub: "ライン速度 3 から始まる", rate: .28, stageAt: [0, 3, 8], switch: true, startLvl: 3, claimMax: 3, boss: true },
   { name: "新人の箱詰め", sub: "異常が多い。止めて止めて止めまくる", rate: .4, stageAt: [0, 2, 7], switch: true, startLvl: 2, claimMax: 3, boss: true },
@@ -585,7 +589,6 @@ const COLORS = [
   { code: "B60", name: "ネイビー", hex: "#24365c" },
 ];
 const byCode = c => COLORS.find(x => x.code === c);
-const REVS = ["A", "B", "C", "D", "E"];
 const LOOKALIKE = { "0": "8", "8": "6", "6": "8", "3": "8", "1": "7", "7": "1", "5": "6", "2": "3", "4": "9", "9": "4" };
 
 /* 箱に紛れ込む異物（座標は 320×160 の絵の中） */
@@ -642,66 +645,48 @@ const stageOf = (i, day) => (day.boss && i >= BOSS_FROM) || i >= day.stageAt[2] 
 
 /* ====== シフトの組み立て ======
    ・最初の3箱は練習：1・2箱目は正常、3箱目はひと目で分かる異常
-   ・主力品：何度も流れてくる1品目。途中で版が切り替わり、その後に旧品が混ざる
+   ・主力品：何度も流れてくる1品目（慣れたころに異常が混ざる）
    ・静かな区間：QUIET 箱続けて正常のあとに異常を1つ置く */
 function makeShift(day) {
   const mType = pick(PARTS.filter(p => p.sided && p.qtys.some(q => q > 1)));
   const mSide = pick(["R", "L"]);
-  const oldRev = pick(REVS.slice(0, 4));
-  const main = {
-    type: mType, side: mSide, pn: makePn(mType, mSide), color: pick(COLORS), qty: pick(mType.qtys),
-    oldRev, newRev: REVS[REVS.indexOf(oldRev) + 1],
-  };
-  const switchAt = day.switch ? 5 + rnd(3) : 999;
+  const main = { type: mType, side: mSide, pn: makePn(mType, mSide), color: pick(COLORS), qty: pick(mType.qtys) };
   const inBoss = i => day.boss && i >= BOSS_FROM;
   const flags = Array.from({ length: BOXES }, (_, i) => chance(inBoss(i) ? 0.5 : day.rate));
   const isMain = Array.from({ length: BOXES }, () => chance(0.4));
   flags[0] = flags[1] = false; flags[2] = true;
-  let forceOld = -1;
-  if (day.switch) {
-    isMain[switchAt] = true; flags[switchAt] = false;
-    forceOld = Math.min(BOXES - 1, switchAt + 2 + rnd(Math.max(1, BOXES - switchAt - 3)));
-    isMain[forceOld] = true; flags[forceOld] = true;
-  }
-  // 静かな区間（ボスより前）。旧品の強制位置と重ならない場所を選ぶ
+  // 静かな区間（ボスより前）
   const end = day.boss ? BOSS_FROM : BOXES;
-  let qs = 4;
-  for (let t = 0; t < 40; t++) {
-    qs = 4 + rnd(Math.max(1, end - QUIET - 5));
-    if (forceOld < qs || forceOld > qs + QUIET) break;
-  }
-  if (!(forceOld < qs || forceOld > qs + QUIET)) forceOld = -1;
+  const qs = 4 + rnd(Math.max(1, end - QUIET - 5));
   for (let i = qs; i < qs + QUIET; i++) flags[i] = false;
   flags[qs + QUIET] = true;
   // 監査区間の異常の数をそろえる
   if (day.boss) {
     while (flags.slice(BOSS_FROM).filter(Boolean).length < 3) flags[BOSS_FROM + rnd(BOXES - BOSS_FROM)] = true;
-    // 監査区間（6 箱）の異常はちょうど 3 つ。全部赤箱では監査に合格できないようにする
+    // 監査区間（6 箱）の異常はちょうど 3 つ。全部止めても監査に合格できないようにする
     while (flags.slice(BOSS_FROM).filter(Boolean).length > 3) {
       const i = BOSS_FROM + rnd(BOXES - BOSS_FROM);
-      if (flags[i] && i !== forceOld) flags[i] = false;
+      if (flags[i]) flags[i] = false;
     }
   }
-  const boxes = flags.map((f, i) => makeBox(i, f, isMain[i] && i !== 2, main, switchAt, i === forceOld, day));
-  return { main, switchAt, boxes };
+  const boxes = flags.map((f, i) => makeBox(i, f, isMain[i] && i !== 2, main, day));
+  return { main, boxes };
 }
 
-function makeBox(i, wantDefect, isMain, main, switchAt, forceOld, day) {
+function makeBox(i, wantDefect, isMain, main, day) {
   const stage = stageOf(i, day);
   let truth;
   if (isMain) {
-    truth = { type: main.type, side: main.side, pn: main.pn, color: main.color, qty: main.qty,
-      rev: i >= switchAt ? main.newRev : main.oldRev, main: true };
+    truth = { type: main.type, side: main.side, pn: main.pn, color: main.color, qty: main.qty, main: true };
   } else {
     const type = pick(PARTS);
     const side = type.sided ? pick(["R", "L"]) : null;
-    truth = { type, side, pn: makePn(type, side), color: pick(COLORS), rev: pick(REVS), qty: pick(type.qtys) };
+    truth = { type, side, pn: makePn(type, side), color: pick(COLORS), qty: pick(type.qtys) };
   }
   const label = { ...truth };
   const part = { ...truth, foreign: null, count: truth.qty, odd: null };
   const box = { n: i + 1, stage, truth, label, part, defect: null, sheetColorName: truth.color.name,
-    orderNo: "W" + digits(6), lot: digits(2) + "-" + digits(4), kanban: pick(["A", "B", "K", "S"]) + digits(3),
-    switched: isMain && i >= switchAt };
+    orderNo: "W" + digits(6), lot: digits(2) + "-" + digits(4), kanban: pick(["A", "B", "K", "S"]) + digits(3) };
   const done = () => { buildPieces(part); return box; };
   if (!wantDefect) return done();
 
@@ -716,28 +701,22 @@ function makeBox(i, wantDefect, isMain, main, switchAt, forceOld, day) {
     box.defect = { where: "part", field: part.foreign ? "foreign" : "type" };
     return done();
   }
-  // 切替後の主力品は、旧版の在庫が流れてくることがある
-  if (forceOld || (isMain && i > switchAt && chance(day.oldProb || 0.5))) {
-    label.rev = part.rev = main.oldRev;
-    box.defect = { where: "both", field: "oldrev" };
-    return done();
-  }
   const r = Math.random();
   if (stage >= 2 && r < 0.08) {
     box.sheetColorName = otherColor(truth.color, true).name;
     box.defect = { where: "sheet", field: "color" };
   } else if (r < 0.52) {
     const opts = ["pn", "pn", "qty", "color"];
-    if (stage >= 1) opts.push("rev", "blur");
+    if (stage >= 1) opts.push("blur");
+    if (day.colorRush) opts.push("color", "color");
     const f = pick(opts);
     box.defect = { where: "label", field: f };
     if (f === "pn") label.pn = similarPn(truth.pn);
     if (f === "qty") label.qty = pick([truth.qty + 1, truth.qty * 2, truth.qty + 2, truth.qty - 1].filter(q => q > 0 && q !== truth.qty));
     if (f === "color") label.color = otherColor(truth.color, stage >= 1);
-    if (f === "rev") label.rev = pick(REVS.filter(x => x !== truth.rev));
   } else {
     const opts = ["pn", "color", "color", "type", "foreign", "qty"];
-    if (stage >= 1) opts.push("rev");
+    if (day.colorRush) opts.push("color", "color", "color");
     if (truth.type.sided) opts.push("side", "side");
     const f = pick(opts);
     box.defect = { where: "part", field: f };
@@ -745,7 +724,6 @@ function makeBox(i, wantDefect, isMain, main, switchAt, forceOld, day) {
     const oneOnly = stage >= 2 && truth.qty > 1 && chance(0.5) && ["color", "side", "type"].includes(f);
     const odd = oneOnly ? { idx: 1 + rnd(truth.qty - 1) } : null;
     if (f === "pn") part.pn = similarPn(truth.pn);
-    if (f === "rev") part.rev = pick(REVS.filter(x => x !== truth.rev));
     if (f === "qty") part.count = pick([truth.qty - 1, truth.qty + 1].filter(q => q > 0));
     if (f === "color") {
       const c = otherColor(truth.color, stage >= 1);
@@ -778,13 +756,11 @@ function buildPieces(part) {
 function describe(box) {
   const d = box.defect; if (!d) return "三点とも一致しています。";
   const t = box.truth, l = box.label, p = box.part;
-  if (d.where === "both") return `切替前の旧版の品（版 ${l.rev}）です。指示は ${t.rev}。`;
   if (d.where === "sheet") return `指示書の色コード ${t.color.code} と色名「${box.sheetColorName}」が食い違っています。指示書の誤りは出荷せず確認します。`;
   if (d.where === "label") {
     if (d.field === "pn") return `ラベルの品番 ${l.pn} が指示書 ${t.pn} と違います。`;
     if (d.field === "qty") return `ラベルの入数 ${l.qty} が指示数 ${t.qty} と違います。`;
     if (d.field === "color") return `ラベルの色 ${l.color.code} が指示書 ${t.color.code} と違います。`;
-    if (d.field === "rev") return `ラベルの版 ${l.rev} が指示書 ${t.rev} と違います。`;
     if (d.field === "blur") return "ラベルの品番がかすれて読めません。読めないラベルは出荷しません。";
   } else {
     const o = p.odd, n = p.count;
@@ -794,7 +770,6 @@ function describe(box) {
     if (d.field === "qty") return `箱の中身が ${n} 個です。指示数は ${t.qty}。`;
     if (d.field === "pn") return `現品の品番 ${p.pn} が指示書 ${t.pn} と違います。`;
     if (d.field === "color") return `現品の色が ${p.color.code} ${p.color.name} です。指示は ${t.color.code} ${t.color.name}。`;
-    if (d.field === "rev") return `現品の版 ${p.rev} が指示書 ${t.rev} と違います。`;
     if (d.field === "side") return `現品が ${p.side} 品です。指示は ${t.side}（形も左右逆）。`;
     if (d.field === "type") return `箱の中身が ${p.type.name} です。指示は ${t.type.name}。`;
     if (d.field === "foreign") return `箱に異物（${p.foreign.name}）が入っています。`;
@@ -803,10 +778,9 @@ function describe(box) {
 }
 function category(box) {
   const d = box.defect; if (!d) return "";
-  if (d.where === "both") return "旧版品";
   if (d.where === "sheet") return "指示書の誤り";
   if (box.part.odd) return "奥の1個";
-  return ({ pn: "品番", qty: "数量", color: "色", rev: "版", blur: "ラベルかすれ", side: "左右", type: "異品", foreign: "異物" })[d.field];
+  return ({ pn: "品番", qty: "数量", color: "色", blur: "ラベルかすれ", side: "左右", type: "異品", foreign: "異物" })[d.field];
 }
 
 /* ====== 効果音（Web Audio。最初の操作のあとに鳴る） ====== */
@@ -929,7 +903,7 @@ function partSvg(p) {
     <g class="idtag" transform="translate(${tagX.toFixed(1)},${ty.toFixed(1)})">
       <rect width="108" height="28" rx="2" fill="#f7f6f0" stroke="#9aa0a4" stroke-width=".8"/>
       <text x="5" y="12" font-family="IBM Plex Mono, Consolas, monospace" font-size="11" font-weight="600" fill="#15191c">${esc(p.pn)}</text>
-      <text x="5" y="24" font-family="BIZ UDPGothic, sans-serif" font-size="9.5" fill="#15191c">${p.side ? p.side + "　" : ""}版 ${esc(p.rev)}</text>
+      <text x="5" y="24" font-family="BIZ UDPGothic, sans-serif" font-size="9.5" fill="#15191c">${p.side ? (p.side === "R" ? "右用（R）" : "左用（L）") : ""}</text>
     </g>
     ${f ? f.draw(f.at[0], f.at[1]) : ""}
   </svg>`;
@@ -941,6 +915,21 @@ const pnHtml = pn => {
   const side = /[RL]$/.test(c) ? c.slice(-1) : "";
   return `${esc(a)}<span class="sep">-</span>${esc(b)}<span class="sep">-</span>${esc(side ? c.slice(0, -1) : c)}${side ? `<span class="tail">${side}</span>` : ""}`;
 };
+
+/* 指示書の見本：品物の形と色（L は左右反転）。陰影を付けて立体に見せる */
+function sampleSvg(t) {
+  const flip = t.side === "L";
+  return `<svg class="sample-img" viewBox="0 0 320 160" role="img" aria-label="見本：${esc(t.type.name)} ${esc(t.color.name)}">
+    <defs><linearGradient id="smp-sh" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset=".45" stop-color="#fff" stop-opacity=".05"/><stop offset="1" stop-color="#000" stop-opacity=".35"/>
+    </linearGradient></defs>
+    <g transform="${flip ? "translate(320,0) scale(-1,1)" : ""}">
+      <path d="${t.type.body}" transform="translate(5,8)" fill="#000" opacity=".22"/>
+      <path d="${t.type.body}" fill="${t.color.hex}" stroke="rgba(0,0,0,.55)" stroke-width="2.5"/>
+      <path d="${t.type.body}" fill="url(#smp-sh)"/>
+    </g>
+  </svg>`;
+}
 
 function rowHtml(key, label, value, mono, extraCls = "", sub = "", ddCls = "") {
   return `<div class="row ${extraCls}" data-f="${key}"><dt>${label}</dt><dd class="${mono ? "mono" : ""} ${ddCls}">${value}${sub}</dd></div>`;
@@ -1221,14 +1210,14 @@ const View3D = {
     g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
     return (this._blob = new THREE.CanvasTexture(c));
   },
-  tagTexture(pn, side, rev) {
+  tagTexture(pn, side) {
     const c = document.createElement("canvas"); c.width = 540; c.height = 140;
     const g = c.getContext("2d");
     g.fillStyle = "#f6f4ec"; g.fillRect(0, 0, 540, 140);
     g.strokeStyle = "#9aa0a4"; g.lineWidth = 4; g.strokeRect(2, 2, 536, 136);
     g.fillStyle = "#15191c";
     g.font = "600 60px 'IBM Plex Mono', Consolas, monospace"; g.fillText(pn, 22, 66);
-    g.font = "48px 'BIZ UDPGothic', sans-serif"; g.fillText(`${side ? side + "　" : ""}版 ${rev}`, 22, 124);
+    g.font = "48px 'BIZ UDPGothic', sans-serif"; if (side) g.fillText(side === "R" ? "右用（R）" : "左用（L）", 22, 124);
     const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = this.r.capabilities.getMaxAnisotropy();
     return t;
   },
@@ -1434,7 +1423,7 @@ const View3D = {
     });
     // 識別ラベル：手前の1個に貼る（文字は反転させない）
     const f0 = pos[0], tg = f0.m.tag, flip = f0.pc.side === "L" ? -1 : 1;
-    const tagM = new T.MeshStandardMaterial({ map: this.tagTexture(p.pn, p.side, p.rev), roughness: 0.92, metalness: 0, envMapIntensity: this.night ? 0.05 : 0.22, polygonOffset: true, polygonOffsetFactor: -2, side: T.DoubleSide });
+    const tagM = new T.MeshStandardMaterial({ map: this.tagTexture(p.pn, p.side), roughness: 0.92, metalness: 0, envMapIntensity: this.night ? 0.05 : 0.22, polygonOffset: true, polygonOffsetFactor: -2, side: T.DoubleSide });
     let tag;
     if (tg.curved) {
       const arc = tg.w / tg.r, hgt = tg.w * 140 / 540;
@@ -1769,8 +1758,7 @@ function hudHtml() {
         <div class="hp"><i style="width:${(a.hp / a.max * 100).toFixed(1)}%"></i></div>
         <div class="strikes">指摘 <span class="dots">${Array.from({ length: AUDIT_MAX }, (_, k) => `<i class="${k < a.strikes ? "on" : ""}"></i>`).join("")}</span>　<span class="note">監査中は出荷の正誤もその場で分かります</span></div>
       </div>` : ""}
-    ${S.i >= S.shift.switchAt ? `<div class="chip">版の切替：<b class="mono">${esc(S.shift.main.pn)}</b>　${S.shift.main.oldRev} → <b class="mono">${S.shift.main.newRev}</b></div>` : ""}
-    ${S.dayIdx === 0 && S.i < 3 ? `<div class="chip learn">練習 ${S.i + 1} / 3：${["三点とも同じなら右へスワイプして段ボールへ", "品番・色・版・数量・左右を見比べます", "何かおかしい箱は左へスワイプして赤箱へ"][S.i]}</div>` : ""}`;
+    ${S.dayIdx === 0 && S.i < 3 ? `<div class="chip learn">練習 ${S.i + 1} / 3：${["三点とも同じなら右へスワイプして段ボールへ", "品番・色・形・数量・左右を見比べます。色と形は指示書の見本と", "何かおかしい箱は左へスワイプして赤箱へ"][S.i]}</div>` : ""}`;
 }
 
 function renderBox() {
@@ -1786,11 +1774,10 @@ function renderBox() {
         <dl class="rows" data-card="sheet">
           ${rowHtml("pn", "品番", pnHtml(t.pn), true)}
           ${rowHtml("name", "品名", nameHtml(t.type, t.side))}
-          ${rowHtml("color", "色", esc(t.color.code), true, "", `<span class="cname">${esc(box.sheetColorName)}</span>`)}
-          ${rowHtml("rev", "版", esc(t.rev), true)}
+          ${rowHtml("color", "色", `<i class="cc" style="background:${t.color.hex}"></i>${esc(t.color.code)}`, true, "", `<span class="cname">${esc(box.sheetColorName)}</span>`)}
           ${rowHtml("qty", "数量", t.qty, true, "qty")}
+          <div class="row sample" data-f="sample"><dt>見本</dt><dd>${sampleSvg(t)}</dd></div>
         </dl>
-        ${box.switched ? `<span class="stamp">版切替</span>` : ""}
       </section>
       <section class="card box" aria-label="梱包箱ラベル">
         <div class="tag">
@@ -1799,7 +1786,6 @@ function renderBox() {
             ${rowHtml("pn", "品番", pnHtml(l.pn), true, "", "", blur ? "smudge" : "")}
             ${rowHtml("name", "品名", nameHtml(l.type, l.side))}
             ${rowHtml("color", "色", esc(l.color.code), true)}
-            ${rowHtml("rev", "版", esc(l.rev), true)}
             ${rowHtml("qty", "入数", l.qty, true, "qty")}
           </dl>
           ${barcodeSvg(l.pn + box.lot)}
@@ -1807,7 +1793,7 @@ function renderBox() {
       </section>
       <section class="stage" id="stage" aria-label="現品">
         <div class="hint"><span><b>現品</b><span class="lot">　ロット ${box.lot}</span></span><span>${S.day.night ? "なぞって照らす・はじいて仕分け" : "タップで拡大　← NG ・ OK →"}</span></div>
-        ${S.dayIdx === 0 && S.i < 3 ? `<div class="ghost ${S.i === 2 ? "left" : "right"}" aria-hidden="true"><i></i><span>${S.i === 2 ? "← 左へはじいて赤箱" : "右へはじいて出荷 →"}</span></div>` : ""}
+        ${S.dayIdx === 0 && S.i < 3 ? `<div class="ghost ${S.i === 2 ? "left" : "right"}" aria-hidden="true"><i></i><span>${S.i === 2 ? "← 左へはじいて止める" : "右へはじいて出荷 →"}</span></div>` : ""}
       </section>
     </div>`;
   $bins.hidden = false;
@@ -1887,12 +1873,6 @@ async function enterBox() {
   } else if (S.audit && S.audit.active && S.i === BOSS_FROM) {
     SND.boss(); buzz([300, 100, 300]);
     bigText("客先監査", "監査員　重箱 隅子 が現れた", "boss", 1600).then(run);
-  } else if (S.i === S.shift.switchAt) {
-    // 版の切替は帯で知らせるだけ（ラインは止めない）
-    const m = S.shift.main;
-    SND.notice();
-    flashToast("info", "班長より：この箱から版が切り替わります", `${m.type.name}${m.side ? `（${m.side}）` : ""}　${m.pn}　版 ${m.oldRev} → ${m.newRev}`, 3200);
-    run();
   }
   else run();
 }
@@ -1910,23 +1890,6 @@ function arriveClaim(c) {
   $app.classList.remove("shake"); void $app.offsetWidth; $app.classList.add("shake");
   SND.claim(); buzz([120, 80, 120, 80, 220]);
   View.flash();
-}
-
-function showNotice() {
-  S.locked = true;
-  SND.notice();
-  const m = S.shift.main;
-  const v = document.createElement("div");
-  v.className = "verdict info";
-  v.innerHTML = `<div class="bubble" role="dialog" aria-label="班長からの連絡">
-      <div class="from">班長より</div>
-      <div class="what">この箱から版が切り替わります</div>
-      <div class="why">${esc(sideName(m.type.name, m.side))}　<span class="mono">${esc(m.pn)}</span><br>版 <b class="mono">${m.oldRev}</b> → <b class="mono">${m.newRev}</b>。切替前の在庫が混ざらないよう見てください。</div>
-      <button class="big-btn ack" id="ack" type="button">了解</button></div>`;
-  document.getElementById("desk").appendChild(v);
-  const ok = () => { v.remove(); S.next = null; run(); };
-  S.next = ok;
-  document.getElementById("ack").addEventListener("click", ok);
 }
 
 function run() {
@@ -2027,7 +1990,7 @@ function judge(choice) {
   } else if (choice === "ng") {
     if (isNG) { pts = Math.round((CATCH + fast) * mult); kind = "hit"; dmg = DMG_CATCH; title = S.combo >= 4 ? `ナイスストップ　連続 ${S.combo + 1}` : "ナイスストップ"; }
     else {
-      pts = OVER; kind = "over"; title = "過検出（良品を赤箱へ）";
+      pts = OVER; kind = "over"; title = "過検出（良品を止めた）";
       // 監査中の過検出は「判定基準が分かっていない」として指摘され、疑いも少し戻る
       if (a) { strike = true; dmg = -DMG_CATCH; title = "監査員の指摘：良品を止めた"; }
     }
@@ -2117,7 +2080,6 @@ function markDefect(box) {
   const mark = (card, f) => { const r = document.querySelector(`[data-card="${card}"] [data-f="${f}"]`); if (r) r.classList.add("hit"); };
   if (d.where === "label") mark("label", d.field === "blur" ? "pn" : d.field);
   if (d.where === "sheet") mark("sheet", "color");
-  if (d.where === "both") mark("label", "rev");
   if (d.where === "part" || d.where === "both") {
     document.getElementById("stage").classList.add("hit");
     View.reveal();
@@ -2264,7 +2226,7 @@ function title() {
       <ol class="steps">
         <li><span class="sn">1</span><b>見比べる</b><span class="sd">指示書が正。現品票と現品が同じか</span></li>
         <li><span class="sn">2</span><b class="k">右へ → 出荷</b><span class="sd">三つとも合っていれば段ボールへ</span></li>
-        <li><span class="sn">3</span><b class="r">← 左へ 赤箱</b><span class="sd">一つでも違えば止める</span></li>
+        <li><span class="sn">3</span><b class="r">← 左へ 止める</b><span class="sd">不良も誤品も、一つでも違えば</span></li>
       </ol>
       <p class="fine">出荷した箱の正誤はその場では出ません。異常品を出すと数箱あとに<b class="r">市場クレーム</b>が届き、たまると出荷停止。2日目からは11箱目で<b>客先監査</b>が始まります。現品をタップすると識別ラベルを拡大できます。</p>
       <ol class="days">

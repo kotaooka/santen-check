@@ -26,8 +26,8 @@ for (const [di, day] of G.DAYS.entries()) {
       if (!b.defect) {
         // 正常の箱は三点が完全に一致している
         const t = b.truth, l = b.label, p = b.part;
-        check(l.pn === t.pn && l.qty === t.qty && l.color === t.color && l.rev === t.rev, "正常の箱でラベルが指示と違う");
-        check(p.pn === t.pn && p.rev === t.rev && p.count === t.qty && !p.foreign && p.pieces.every(x => x.type === t.type && x.side === t.side && x.color === t.color), "正常の箱で現品が指示と違う");
+        check(l.pn === t.pn && l.qty === t.qty && l.color === t.color, "正常の箱でラベルが指示と違う");
+        check(p.pn === t.pn && p.count === t.qty && !p.foreign && p.pieces.every(x => x.type === t.type && x.side === t.side && x.color === t.color), "正常の箱で現品が指示と違う");
         check(b.sheetColorName === t.color.name, "正常の箱で指示書の色名が違う");
         return;
       }
@@ -35,8 +35,8 @@ for (const [di, day] of G.DAYS.entries()) {
       // 異常には必ず説明があり、画面に出る違いがある
       check(G.describe(b).length > 0 && !!G.category(b), "異常の説明がない");
       const t = b.truth, l = b.label, p = b.part;
-      const visible = b.sheetColorName !== t.color.name || l.pn !== t.pn || l.qty !== t.qty || l.color !== t.color || l.rev !== t.rev
-        || p.pn !== t.pn || p.rev !== t.rev || p.count !== t.qty || !!p.foreign || b.defect.field === "blur"
+      const visible = b.sheetColorName !== t.color.name || l.pn !== t.pn || l.qty !== t.qty || l.color !== t.color
+        || p.pn !== t.pn || p.count !== t.qty || !!p.foreign || b.defect.field === "blur"
         || p.pieces.some(x => x.type !== t.type || x.side !== t.side || x.color !== t.color);
       check(visible, `見えない異常：${JSON.stringify(b.defect)}`);
       check(p.pieces.length === p.count, "現品の個数と絵の数が違う");
@@ -59,7 +59,7 @@ for (const [di, day] of G.DAYS.entries()) {
   console.log(`第${di + 1}日 ${day.name}：異常 ${(defects / N).toFixed(1)} 箱/日、監査の余裕 最小 ${day.boss ? minMargin : "－"}`);
 }
 
-// 得点の釣り合い：何も見ずに全部出荷・全部赤箱は、全問正解より必ず低い（簡易シミュレーション）
+// 得点の釣り合い：何も見ずに全部出荷・全部止めるは、全問正解より必ず低い（簡易シミュレーション）
 function play(day, strat) {
   const sh = G.makeShift(day);
   let lvl = day.startLvl, streak = 0, score = 0, claims = [], cc = 0;
@@ -78,8 +78,8 @@ const avg = (day, f) => { let t = 0; for (let i = 0; i < 1000; i++) t += play(da
 for (const [di, day] of G.DAYS.entries()) {
   const perfect = avg(day, ng => ng ? "ng" : "ok"), allOk = avg(day, () => "ok"), allNg = avg(day, () => "ng");
   check(allOk < perfect * 0.5, `第${di + 1}日：全部出荷 ${allOk.toFixed(0)} が全問正解 ${perfect.toFixed(0)} に近すぎる`);
-  check(allNg < perfect * 0.5, `第${di + 1}日：全部赤箱 ${allNg.toFixed(0)} が全問正解 ${perfect.toFixed(0)} に近すぎる`);
-  // 何も見ずに全部赤箱では、監査に（ほぼ）合格できない
+  check(allNg < perfect * 0.5, `第${di + 1}日：全部止める ${allNg.toFixed(0)} が全問正解 ${perfect.toFixed(0)} に近すぎる`);
+  // 何も見ずに全部止めるでは、監査に（ほぼ）合格できない
   if (day.boss) {
     let pass = 0;
     for (let s = 0; s < 3000; s++) {
@@ -92,9 +92,12 @@ for (const [di, day] of G.DAYS.entries()) {
         if (strikes >= 3) break;
       }
     }
-    check(pass / 3000 < 0.1, `第${di + 1}日：全部赤箱で監査に ${(pass / 30).toFixed(1)}% 合格できてしまう`);
+    check(pass / 3000 < 0.1, `第${di + 1}日：全部止めるで監査に ${(pass / 30).toFixed(1)}% 合格できてしまう`);
   }
 }
+
+// 版の要素は使わない
+check(!/設変|版の切替|旧版|>版</.test(html), "画面に「版」の要素が残っている");
 
 // オフライン：sw.js が事前に保存するファイルが実在し、three.js を同梱の版から読んでいる
 const root = path.join(__dirname, "..");
