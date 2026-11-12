@@ -688,12 +688,12 @@ const SOUND_KEY = "santen-check-sound";
 /* 7日間。stageAt は難易度の段階が上がる箱番号（0始まり） */
 const DAYS = [
   { name: "立上げ", sub: "まずは三点を見比べる目を作る", rate: .22, stageAt: [0, 99, 99], switch: false, startLvl: 1, claimMax: 3, boss: false },
-  { name: "通常稼働", sub: "11 箱目から客先監査が来る", rate: .25, stageAt: [0, 4, 99], switch: true, startLvl: 1, claimMax: 3, boss: true },
+  { name: "通常稼働", sub: "11箱目から客先監査が来る", rate: .25, stageAt: [0, 4, 99], switch: true, startLvl: 1, claimMax: 3, boss: true },
   { name: "色ちがいラッシュ", sub: "似た色が混ざりやすい。見本と見比べろ", rate: .28, stageAt: [0, 2, 8], switch: true, colorRush: true, startLvl: 1, claimMax: 3, boss: true },
   { name: "夜勤", sub: "照明が切れている。指でなぞって照らす", rate: .28, stageAt: [0, 4, 9], switch: true, startLvl: 1, claimMax: 3, boss: true, night: true },
-  { name: "繁忙期", sub: "ライン速度 3 から始まる", rate: .28, stageAt: [0, 3, 8], switch: true, startLvl: 3, claimMax: 3, boss: true },
+  { name: "繁忙期", sub: "ライン速度3から始まる", rate: .28, stageAt: [0, 3, 8], switch: true, startLvl: 3, claimMax: 3, boss: true },
   { name: "新人の箱詰め", sub: "異常が多い。止めて止めて止めまくる", rate: .4, stageAt: [0, 2, 7], switch: true, startLvl: 2, claimMax: 3, boss: true },
-  { name: "客先監査週間", sub: "クレーム 2 件で出荷停止。監査員は本気", rate: .32, stageAt: [0, 1, 5], switch: true, startLvl: 2, claimMax: 2, boss: true, bossK: .95 },
+  { name: "客先監査週間", sub: "クレーム2件で出荷停止。監査員は本気", rate: .32, stageAt: [0, 1, 5], switch: true, startLvl: 2, claimMax: 2, boss: true, bossK: .95 },
 ];
 
 /* ====== 品物の絵（320×160、R を基準に描き L は左右反転） ====== */
@@ -920,22 +920,22 @@ function buildPieces(part) {
 function describe(box) {
   const d = box.defect; if (!d) return "三点とも一致しています。";
   const t = box.truth, l = box.label, p = box.part;
-  if (d.where === "sheet") return `指示書の色コード ${t.color.code} と色名「${box.sheetColorName}」が食い違っています。指示書の誤りは出荷せず確認します。`;
+  if (d.where === "sheet") return `指示書の色コード${t.color.code}と色名「${box.sheetColorName}」が食い違っています。指示書の誤りは出荷せず確認します。`;
   if (d.where === "label") {
-    if (d.field === "pn") return `ラベルの品番 ${l.pn} が指示書 ${t.pn} と違います。`;
-    if (d.field === "qty") return `ラベルの入数 ${l.qty} が指示数 ${t.qty} と違います。`;
-    if (d.field === "color") return `ラベルの色 ${l.color.code} が指示書 ${t.color.code} と違います。`;
+    if (d.field === "pn") return `ラベルの品番${l.pn}が指示書${t.pn}と違います。`;
+    if (d.field === "qty") return `ラベルの入数${l.qty}が指示数${t.qty}と違います。`;
+    if (d.field === "color") return `ラベルの色${l.color.code}が指示書${t.color.code}と違います。`;
     if (d.field === "blur") return "ラベルの品番がかすれて読めません。読めないラベルは出荷しません。";
   } else {
     const o = p.odd, n = p.count;
-    if (o && d.field === "color") return `${n} 個のうち 1 個の色が ${o.color.code} ${o.color.name} です。指示は ${t.color.code} ${t.color.name}。`;
-    if (o && d.field === "side") return `${n} 個のうち 1 個が ${o.side} 品です。指示は ${t.side}（形が左右逆）。`;
-    if (o && d.field === "type") return `${n} 個のうち 1 個が ${o.type.name} です。指示は ${t.type.name}。`;
-    if (d.field === "qty") return `箱の中身が ${n} 個です。指示数は ${t.qty}。`;
-    if (d.field === "pn") return `現品の品番 ${p.pn} が指示書 ${t.pn} と違います。`;
-    if (d.field === "color") return `現品の色が ${p.color.code} ${p.color.name} です。指示は ${t.color.code} ${t.color.name}。`;
-    if (d.field === "side") return `現品が ${p.side} 品です。指示は ${t.side}（形も左右逆）。`;
-    if (d.field === "type") return `箱の中身が ${p.type.name} です。指示は ${t.type.name}。`;
+    if (o && d.field === "color") return `${n}個のうち1個の色が${o.color.code} ${o.color.name}です。指示は${t.color.code} ${t.color.name}。`;
+    if (o && d.field === "side") return `${n}個のうち1個が${o.side}品です。指示は${t.side}（形が左右逆）。`;
+    if (o && d.field === "type") return `${n}個のうち1個が${o.type.name}です。指示は${t.type.name}。`;
+    if (d.field === "qty") return `箱の中身が${n}個です。指示数は${t.qty}。`;
+    if (d.field === "pn") return `現品の品番${p.pn}が指示書${t.pn}と違います。`;
+    if (d.field === "color") return `現品の色が${p.color.code} ${p.color.name}です。指示は${t.color.code} ${t.color.name}。`;
+    if (d.field === "side") return `現品が${p.side}品です。指示は${t.side}（形も左右逆）。`;
+    if (d.field === "type") return `箱の中身が${p.type.name}です。指示は${t.type.name}。`;
     if (d.field === "foreign") return `箱に異物（${p.foreign.name}）が入っています。`;
   }
   return "";
@@ -1051,7 +1051,7 @@ function partSvg(p) {
   const tagX = Math.max(2, Math.min(320 - 110, ox0 + lx * s + (108 * s - 108) / 2));
   const ty = Math.max(2, Math.min(160 - 30, oy0 + ty0 * s));
   const f = p.foreign;
-  return `<svg viewBox="0 0 320 160" role="img" aria-label="現品 ${esc(p.type.name)} ${n} 個">
+  return `<svg viewBox="0 0 320 160" role="img" aria-label="現品${esc(p.type.name)} ${n}個">
     <defs>
       <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0" stop-color="#fff" stop-opacity=".42"/><stop offset=".35" stop-color="#fff" stop-opacity=".06"/>
@@ -1912,21 +1912,21 @@ function hudHtml() {
   return `
     <div class="hud">
       <div class="count">箱 <b>${S.i + 1}</b> / ${BOXES}</div>
-      <div class="speed ${lvl === 5 ? "max" : ""}" aria-label="ライン速度 ${lvl}"><span>ライン速度</span>${chev}<span class="mono">×${MULT[lvl - 1]}</span></div>
+      <div class="speed ${lvl === 5 ? "max" : ""}" aria-label="ライン速度${lvl}"><span>ライン速度</span>${chev}<span class="mono">×${MULT[lvl - 1]}</span></div>
       <div class="score"><span>得点</span>${S.score.toLocaleString("ja-JP")}</div>
     </div>
     <div class="hud2">
       <div class="dayname">第${S.dayIdx + 1}日<span class="dn-name">　${esc(day.name)}</span></div>
-      <div class="claims" aria-label="市場クレーム ${S.claimCount} / ${day.claimMax}"><span class="lbl">クレーム</span> <span class="dots">${dots}</span></div>
+      <div class="claims" aria-label="市場クレーム${S.claimCount} / ${day.claimMax}"><span class="lbl">クレーム</span> <span class="dots">${dots}</span></div>
       ${S.combo >= 2 ? `<div class="combo">連続 <b class="mono">${S.combo}</b></div>` : ""}
       <div class="hudbtns"><button class="mute" id="mute" type="button" aria-pressed="${SND.on}">${SND.on ? "音" : "消音"}</button><button class="mute" id="pause" type="button" aria-label="一時停止">II</button></div>
     </div>
-    ${a && a.active ? `<div class="boss" aria-label="客先監査 残り ${a.hp}">
+    ${a && a.active ? `<div class="boss" aria-label="客先監査 残り${a.hp}">
         <div class="bname">客先監査員　重箱 隅子</div>
         <div class="hp"><i style="width:${(a.hp / a.max * 100).toFixed(1)}%"></i></div>
         <div class="strikes">指摘 <span class="dots">${Array.from({ length: AUDIT_MAX }, (_, k) => `<i class="${k < a.strikes ? "on" : ""}"></i>`).join("")}</span>　<span class="note">監査中は出荷の正誤もその場で分かります</span></div>
       </div>` : ""}
-    ${S.dayIdx === 0 && S.i < 3 ? `<div class="chip learn">練習 ${S.i + 1} / 3：${["三点とも同じなら右へスワイプして段ボールへ", "品番・色・形・数量・左右を見比べます。色と形は指示書の見本と", "何かおかしい箱は左へスワイプして赤箱へ"][S.i]}</div>` : ""}`;
+    ${S.dayIdx === 0 && S.i < 3 ? `<div class="chip learn">練習${S.i + 1} / 3：${["三点とも同じなら右へスワイプして段ボールへ", "品番・色・形・数量・左右を見比べます。色と形は指示書の見本と", "何かおかしい箱は左へスワイプして赤箱へ"][S.i]}</div>` : ""}`;
 }
 
 function renderBox() {
@@ -1960,7 +1960,7 @@ function renderBox() {
         </div>
       </section>
       <section class="stage" id="stage" aria-label="現品">
-        <div class="hint"><span><b>現品</b><span class="lot">　ロット ${box.lot}</span></span><span>${S.day.night ? "なぞって照らす・はじいて仕分け" : "タップで拡大　← NG ・ OK →"}</span></div>
+        <div class="hint"><span><b>現品</b><span class="lot">　ロット${box.lot}</span></span><span>${S.day.night ? "なぞって照らす・はじいて仕分け" : "タップで拡大　← NG ・ OK →"}</span></div>
         ${S.dayIdx === 0 && S.i < 3 ? `<div class="ghost ${S.i === 2 ? "left" : "right"}" aria-hidden="true"><i></i><span>${S.i === 2 ? "← 左へはじいて止める" : "右へはじいて出荷 →"}</span></div>` : ""}
       </section>
     </div>`;
@@ -2052,7 +2052,7 @@ function arriveClaim(c) {
   S.lvl = 1; S.streak = 0; S.combo = 0;
   const el = document.createElement("div");
   el.className = "toast";
-  el.innerHTML = `<span class="m">${CLAIM} 点</span><b>市場クレーム発生（${S.claimCount} / ${S.day.claimMax}）</b>箱 ${c.log.box.n}・${esc(c.log.box.truth.type.name)}：${esc(describe(c.log.box))}`;
+  el.innerHTML = `<span class="m">${CLAIM}点</span><b>市場クレーム発生（${S.claimCount} / ${S.day.claimMax}）</b>箱${c.log.box.n}・${esc(c.log.box.truth.type.name)}：${esc(describe(c.log.box))}`;
   $toasts.appendChild(el);
   setTimeout(() => el.remove(), 5600);
   $app.classList.remove("shake"); void $app.offsetWidth; $app.classList.add("shake");
@@ -2093,7 +2093,7 @@ function pauseGame() {
   m.className = "pausemenu"; m.id = "pausemenu";
   m.innerHTML = `<div class="pm-in" role="dialog" aria-label="一時停止">
       <div class="pm-title">一時停止</div>
-      <div class="pm-sub">第${S.dayIdx + 1}日　${esc(S.day.name)}　箱 ${S.i + 1} / ${BOXES}</div>
+      <div class="pm-sub">第${S.dayIdx + 1}日　${esc(S.day.name)}　箱${S.i + 1} / ${BOXES}</div>
       <button class="big-btn" id="pmResume" type="button">再開する</button>
       <button class="sub-btn" id="pmRetry" type="button">この日をやり直す</button>
       <button class="sub-btn" id="pmTitle" type="button">日を選ぶ</button></div>`;
@@ -2156,7 +2156,7 @@ function judge(choice) {
       if (isNG) S.claims.push({ at: S.i + 2 + rnd(3), log: entry });
     }
   } else if (choice === "ng") {
-    if (isNG) { pts = Math.round((CATCH + fast) * mult); kind = "hit"; dmg = DMG_CATCH; title = S.combo >= 4 ? `ナイスストップ　連続 ${S.combo + 1}` : "ナイスストップ"; }
+    if (isNG) { pts = Math.round((CATCH + fast) * mult); kind = "hit"; dmg = DMG_CATCH; title = S.combo >= 4 ? `ナイスストップ　連続${S.combo + 1}` : "ナイスストップ"; }
     else {
       pts = OVER; kind = "over"; title = "過検出（良品を止めた）";
       // 監査中の過検出は「判定基準が分かっていない」として指摘され、疑いも少し戻る
@@ -2188,7 +2188,7 @@ function judge(choice) {
   }
 
   if (!reveal) {
-    floatPts($binOK, `+${pts}`, up ? `ライン速度 ${S.lvl}` : (S.combo >= 3 ? `連続 ${S.combo}` : ""));
+    floatPts($binOK, `+${pts}`, up ? `ライン速度${S.lvl}` : (S.combo >= 3 ? `連続${S.combo}` : ""));
     S.next = null;
     S.timer = setTimeout(next, up ? 380 : 220);
     if (up) SND.levelup();
@@ -2200,7 +2200,7 @@ function judge(choice) {
   if (good) {
     // 正解は止めずに次の箱へ。得点と理由は上に一瞬出す
     SND.catch(S.combo); buzz(40); if (up) setTimeout(() => SND.levelup(), 250);
-    floatPts(choice === "ok" ? $binOK : $binNG, `+${pts}`, up ? `ライン速度 ${S.lvl}` : (S.combo >= 3 ? `連続 ${S.combo}` : ""));
+    floatPts(choice === "ok" ? $binOK : $binNG, `+${pts}`, up ? `ライン速度${S.lvl}` : (S.combo >= 3 ? `連続${S.combo}` : ""));
     if (box.defect) flashToast("ok", title, describe(box) + (a && dmg > 0 ? `　監査員の疑い −${dmg}` : ""), 2000);
     else if (a) flashToast("ok", "監査員が確認しました", `監査員の疑い −${dmg}`, 1200);
     S.next = null;
@@ -2215,7 +2215,7 @@ function judge(choice) {
       <div class="what">${title}</div>
       <div class="why">${esc(describe(box))}</div>
       ${hit}
-      <div class="pts">${pts >= 0 ? "+" : ""}${pts} 点${up ? `　<span class="lvup">ライン速度 ${S.lvl}</span>` : ""}</div>
+      <div class="pts">${pts >= 0 ? "+" : ""}${pts}点${up ? `　<span class="lvup">ライン速度${S.lvl}</span>` : ""}</div>
       <div class="next">タップで次へ</div>`, 2000);
 }
 
@@ -2272,7 +2272,7 @@ function next() {
   if (after === "pass") {
     $bins.classList.add("off");
     SND.win(); buzz([60, 40, 60, 40, 200]);
-    bigText("監査　合格", `指摘 ${S.audit.strikes} 件　＋${BOSS_BONUS.toLocaleString("ja-JP")} 点`, "gold", 1600).then(go);
+    bigText("監査　合格", `指摘${S.audit.strikes}件　＋${BOSS_BONUS.toLocaleString("ja-JP")}点`, "gold", 1600).then(go);
   } else go();
 }
 
@@ -2290,8 +2290,8 @@ async function finish() {
   const last = S.dayIdx === DAYS.length - 1;
 
   // 決着の大きな文字
-  if (S.halted || S.claimCount >= S.day.claimMax) { SND.lose(); await bigText("出荷停止", `市場クレーム ${S.claimCount} 件`, "red", 1700); }
-  else if (S.auditFailed) { SND.lose(); await bigText("監査　不合格", S.audit && S.audit.strikes >= AUDIT_MAX ? `指摘 ${S.audit.strikes} 件` : "監査員の疑いを晴らせなかった", "red", 1700); }
+  if (S.halted || S.claimCount >= S.day.claimMax) { SND.lose(); await bigText("出荷停止", `市場クレーム${S.claimCount}件`, "red", 1700); }
+  else if (S.auditFailed) { SND.lose(); await bigText("監査　不合格", S.audit && S.audit.strikes >= AUDIT_MAX ? `指摘${S.audit.strikes}件` : "監査員の疑いを晴らせなかった", "red", 1700); }
   else { SND.end(); await bigText(last ? "全工程　完了" : `第${S.dayIdx + 1}日　完了`, last ? "七日間、流出を食い止めた" : "", "gold", 1700); }
 
   // 進行と自己ベストの保存
@@ -2313,7 +2313,7 @@ async function finish() {
   const hits = L.filter(x => x.kind === "hit").length;
   const avg = L.length ? L.reduce((s, x) => s + x.sec, 0) / L.length : 0;
   const pct = (a, b) => b ? (a / b * 100).toFixed(0) : "–";
-  const rank = S.halted || S.claimCount >= S.day.claimMax ? ["出荷停止", `市場クレームが ${S.claimCount} 件に達し、ラインが止められました。`]
+  const rank = S.halted || S.claimCount >= S.day.claimMax ? ["出荷停止", `市場クレームが${S.claimCount}件に達し、ラインが止められました。`]
     : S.auditFailed ? ["監査不合格", "監査員の疑いを晴らせませんでした。監査区間は異常が多めです。"]
     : escape === 0 && over === 0 ? ["流出ゼロの守護神", "異常も過検出もありません。"]
     : escape === 0 ? ["流出ゼロ", "止めすぎはありましたが、異常品は一件も出荷していません。"]
@@ -2332,14 +2332,14 @@ async function finish() {
   for (const x of L) { run = x.kind === "hit" ? run + 1 : 0; S.maxCombo = Math.max(S.maxCombo, run); }
   const grade = !cleared ? "—" : escape === 0 && over === 0 && rate >= 0.95 ? "S" : escape === 0 && rate >= 0.85 ? "A" : escape <= 1 ? "B" : "C";
   const strip = L.map(x => x.kind === "hit" ? (x.choice === "ng" ? "●" : "■") : x.kind === "escape" ? "✕" : x.kind === "over" ? "△" : "・").join("");
-  const shareText = `三点照合ゲーム　第${S.dayIdx + 1}日「${S.day.name}」${rank[0]}（ランク ${grade}）\n得点 ${S.score.toLocaleString("ja-JP")}　流出 ${escape}　過検出 ${over}　最大連続 ${S.maxCombo}\n${strip}`;
+  const shareText = `三点照合ゲーム　第${S.dayIdx + 1}日「${S.day.name}」${rank[0]}（ランク${grade}）\n得点${S.score.toLocaleString("ja-JP")}　流出${escape}　過検出${over}　最大連続${S.maxCombo}\n${strip}`;
 
   $app.className = "wrap plain";
   $app.innerHTML = `
     <div class="screen">
       <div class="resulthead">
-        <div class="grade g-${grade === "—" ? "x" : grade}" aria-label="ランク ${grade}">${grade}</div>
-        <div><h1>第${S.dayIdx + 1}日　${esc(S.day.name)}<small>${L.length} 箱のうち異常は ${ngBoxes} 箱でした</small></h1>
+        <div class="grade g-${grade === "—" ? "x" : grade}" aria-label="ランク${grade}">${grade}</div>
+        <div><h1>第${S.dayIdx + 1}日　${esc(S.day.name)}<small>${L.length}箱のうち異常は${ngBoxes}箱でした</small></h1>
         <div class="rank ${cleared ? "" : "halt"}">${rank[0]}<span>${rank[1]}</span></div></div>
       </div>
       <div class="actions">
@@ -2350,8 +2350,8 @@ async function finish() {
       <dl class="stats">
         <div class="stat"><dt>得点</dt><dd>${S.score.toLocaleString("ja-JP")}${isBest ? `<small class="pb">自己ベスト更新</small>` : ""}</dd></div>
         <div class="stat"><dt>正答</dt><dd>${hits}<small>/ ${L.length}</small></dd></div>
-        <div class="stat ${escape ? "warn" : ""}"><dt>見逃し率（流出）</dt><dd>${pct(escape, ngBoxes)}<small>% ・ ${escape} 件</small></dd></div>
-        <div class="stat"><dt>過検出率</dt><dd>${pct(over, okBoxes)}<small>% ・ ${over} 件</small></dd></div>
+        <div class="stat ${escape ? "warn" : ""}"><dt>見逃し率（流出）</dt><dd>${pct(escape, ngBoxes)}<small>% ・ ${escape}件</small></dd></div>
+        <div class="stat"><dt>過検出率</dt><dd>${pct(over, okBoxes)}<small>% ・ ${over}件</small></dd></div>
         <div class="stat"><dt>平均判定時間</dt><dd>${avg.toFixed(1)}<small>秒</small></dd></div>
         <div class="stat"><dt>最大連続</dt><dd>${S.maxCombo}</dd></div>
       </dl>
@@ -2361,9 +2361,9 @@ async function finish() {
         <div class="legend">■ 出荷　● 止めた　✕ 流出　△ 過検出　・ ライン停止</div>
       </div>
       ${weak ? `<div class="best">見逃した異常：${esc(weak)}</div>` : ""}
-      ${late.length ? `<div class="best">シフト後に届いたクレーム ${late.length} 件（${CLAIM * late.length} 点）を得点に含めています。</div>` : ""}
-      ${misses.length ? `<details class="missbox" ${misses.length <= 4 ? "open" : ""}><summary>まちがえた箱　${misses.length} 件</summary><ul class="misses">${misses.map(x =>
-        `<li class="${x.late ? "late" : ""}"><span class="k">${kindName[x.kind]}${x.late ? "（シフト後）" : x.audit && x.kind !== "over" ? "（監査で指摘）" : ""}</span>箱 ${x.box.n}・${esc(x.box.truth.type.name)}　${esc(describe(x.box))}</li>`).join("")}</ul></details>` : ""}
+      ${late.length ? `<div class="best">シフト後に届いたクレーム${late.length}件（${CLAIM * late.length}点）を得点に含めています。</div>` : ""}
+      ${misses.length ? `<details class="missbox" ${misses.length <= 4 ? "open" : ""}><summary>まちがえた箱　${misses.length}件</summary><ul class="misses">${misses.map(x =>
+        `<li class="${x.late ? "late" : ""}"><span class="k">${kindName[x.kind]}${x.late ? "（シフト後）" : x.audit && x.kind !== "over" ? "（監査で指摘）" : ""}</span>箱${x.box.n}・${esc(x.box.truth.type.name)}　${esc(describe(x.box))}</li>`).join("")}</ul></details>` : ""}
     </div>`;
   if (canNext) document.getElementById("nextDay").addEventListener("click", () => start(S.dayIdx + 1));
   document.getElementById("again").addEventListener("click", () => start(S.dayIdx));
@@ -2437,7 +2437,7 @@ function title() {
           </button></li>`;
         }).join("")}
       </ol>
-      ${unlocked + 2 < DAYS.length ? `<p class="fine">この先 ${DAYS.length - unlocked - 2} 日。最後は第7日「客先監査週間」です。</p>` : ""}
+      ${unlocked + 2 < DAYS.length ? `<p class="fine">この先${DAYS.length - unlocked - 2}日。最後は第7日「客先監査週間」です。</p>` : ""}
       <footer class="foot">
         <a href="https://github.com/kotaooka/santen-check" target="_blank" rel="noopener">GitHub</a><span aria-hidden="true">・</span>
         <span>MIT License</span><span aria-hidden="true">・</span>
