@@ -4,7 +4,7 @@
 
 ```
 index.html                  ゲーム本体（HTML・CSS・JS を1ファイルにまとめている）
-sw.js                       オフライン用の Service Worker（更新したら VERSION を上げる）
+sw.js                       オフライン用の Service Worker
 manifest.webmanifest        ホーム画面に追加したときの名前・色・アイコン
 js/three.min.js             three.js r128（MIT。オフラインでも 3D で遊べるよう同梱）
 icons/                      アプリのアイコン（tools/make_icons.py で作る）
@@ -59,4 +59,4 @@ node tests/test.js
 
 ## 公開
 
-GitHub Pages（main ブランチのルート）で公開しています。ページ本体・アイコンはネットワーク優先、three.js はキャッシュ優先、Google Fonts は一度取得したらキャッシュから返します。公開ファイルを変えたら sw.js の VERSION を上げます。
+GitHub Pages（main ブランチのルート）で公開しています。ページ本体・アイコンはネットワーク優先、three.js はキャッシュ優先、Google Fonts は一度取得したらキャッシュから返します。
